@@ -1,0 +1,81 @@
+# ==========================================
+# OpenGL Project Template .gitignore
+# ==========================================
+
+# 1. Build and Binary Directories
+# ------------------------------------------
+[Bb]uild/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+# 2. CMake Artifacts
+# ------------------------------------------
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+.cmake/
+
+# 3. Compiled Binaries & Object Files
+# ------------------------------------------
+*.exe
+*.out
+*.app
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+
+# 4. Dependency Managers (Conan, vcpkg)
+# ------------------------------------------
+.conan/
+vcpkg_installed/
+conanbuildinfo.txt
+conanfile.txt.user
+
+# 5. IDEs and Editors
+# ------------------------------------------
+# Visual Studio
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.user
+*.vcxproj.filters
+*.suo
+*.user
+*.pdb
+*.ilk
+*.ipch/
+*.aps
+*.ncb
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# CLion / JetBrains
+.idea/
+cmake-build-*/
+
+# 6. Operating System Files
+# ------------------------------------------
+.DS_Store
+Thumbs.db
+
+# 7. Local Media / Log Artifacts
+# ------------------------------------------
+*.log
+*.screenshots/
