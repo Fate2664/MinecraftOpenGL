@@ -10,8 +10,6 @@
 [Oo]ut/
 [Dd]ebug/
 [Rr]elease/
-x64/
-x86/
 
 # 2. CMake Artifacts
 # ------------------------------------------
