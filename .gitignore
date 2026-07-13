@@ -48,10 +48,6 @@ conanfile.txt.user
 # ------------------------------------------
 # Visual Studio
 .vs/
-*.sln
-*.vcxproj
-*.vcxproj.user
-*.vcxproj.filters
 *.suo
 *.user
 *.pdb
