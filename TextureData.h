@@ -29,6 +29,17 @@ public:
                 {BlockFaceDirection::Top, glm::vec2(0.0f, 15.0f)},
                 {BlockFaceDirection::Bottom, glm::vec2(2.0f, 15.0f)}
             }
+        },
+        {
+            BlockType::OakWood, std::map<BlockFaceDirection, glm::vec2>
+            {
+                {BlockFaceDirection::Front, glm::vec2(4.0f,14.0f)},
+                {BlockFaceDirection::Back, glm::vec2(4.0f, 14.0f)},
+                {BlockFaceDirection::Left, glm::vec2(4.0f,14.0f)},
+                {BlockFaceDirection::Right, glm::vec2(4.0f,14.0f)},
+                {BlockFaceDirection::Top, glm::vec2(5.0f,14.0f)},
+                {BlockFaceDirection::Bottom, glm::vec2(5.0f,14.0f)}
+            }
         }
     };
     

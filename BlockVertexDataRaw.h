@@ -9,7 +9,8 @@ enum class BlockType
 {
     Empty,
     Dirt,
-    Grass
+    Grass,
+    OakWood
 };
 
 enum class BlockFaceDirection

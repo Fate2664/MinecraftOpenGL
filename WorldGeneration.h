@@ -46,6 +46,7 @@ private:
     
     const Chunk* FindChunk(const ChunkCoord& chunkCoord) const;
     ChunkNeigbors GetNeigbors(const ChunkCoord& chunkCoord) const;
+    void GenerateTrees();
     
     void QueueMissingChunks(int cameraChunkX, int cameraChunkZ);
     void StartGenerationJobs();

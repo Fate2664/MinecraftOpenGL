@@ -1,5 +1,4 @@
 ﻿#include "WorldGeneration.h"
-
 #include <unordered_set>
 
 WorldGeneration::WorldGeneration(int loadDistance) : loadDistance(loadDistance)
@@ -18,6 +17,8 @@ void WorldGeneration::Update(const Camera& camera)
     StartGenerationJobs();
     ProcessMeshQueue();
 }
+
+#pragma region Rendering
 
 void WorldGeneration::Render(Shader& shaderProgram, Camera& camera)
 {
@@ -58,6 +59,8 @@ void WorldGeneration::Delete()
         blockTexture->Delete();
 }
 
+#pragma endregion
+
 const Chunk* WorldGeneration::FindChunk(const ChunkCoord& chunkCoord) const
 {
     auto chunk = chunks.find(chunkCoord);
@@ -76,6 +79,14 @@ ChunkNeigbors WorldGeneration::GetNeigbors(const ChunkCoord& chunkCoord) const
         FindChunk({chunkCoord.x, chunkCoord.z - 1}) //Back neighbour
     };
 }
+
+void WorldGeneration::GenerateTrees()
+{
+    
+}
+
+
+#pragma region Async Methods
 
 void WorldGeneration::QueueMissingChunks(int cameraChunkX, int cameraChunkZ)
 {
@@ -194,3 +205,5 @@ void WorldGeneration::ProcessMeshQueue()
         meshesBuiltThisFrame++;
     }
 }
+
+#pragma endregion 

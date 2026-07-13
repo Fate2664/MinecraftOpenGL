@@ -83,6 +83,7 @@ private:
     void AddFace(BlockFaceDirection face, const glm::vec3& blockPosition, BlockType blockType);    //we use a const reference to give the function access to an 
     //existing BlockFaceData but it does not copy it and it cannot modify it. This is helpful since BlockFaceData uses arrays
     void BuildChunk();  //take data and process it for rendering
+    void GenerateTrees();
     
     bool hasMesh = false;
     bool IsBlockEmpty(int x, int y, int z) const;

@@ -10,6 +10,7 @@ Chunk::Chunk(glm::vec3 position, GeneratedChunkData&& data)
       chunkBlocks(std::move(data.blocks)),
       heightMap(std::move(data.heightMap))
 {
+    GenerateTrees();
 }
 
 GeneratedChunkData Chunk::GenerateData(glm::vec3 position)
@@ -151,6 +152,45 @@ void Chunk::AddFace(BlockFaceDirection face, const glm::vec3& blockPosition, Blo
     chunkIndices.push_back(startIndex + 2);
     chunkIndices.push_back(startIndex + 3);
     chunkIndices.push_back(startIndex);
+}
+
+// void Chunk::GenerateTrees()
+// {
+//     for (int x = 0; x < Constants::chunkSize; x++)
+//     {
+//         for (int z = 0; z < Constants::chunkSize; z++)
+//         {
+//             const int topHeight = static_cast<int>(heightMap[x][z]);
+//             int value = 1 + (std::rand() % (Constants::chunkSize * Constants::chunkSize));
+//             if (value / (Constants::chunkSize * Constants::chunkSize) >= .05)
+//             {
+//                 //Spawn block
+//                 const glm::vec3 blockPosition(x, topHeight + 1 - 63.5, z);
+//                 
+//                 AddFace(BlockFaceDirection::Front, blockPosition , BlockType::OakWood);
+//                 AddFace(BlockFaceDirection::Back, blockPosition , BlockType::OakWood);
+//                 AddFace(BlockFaceDirection::Left, blockPosition , BlockType::OakWood);
+//                 AddFace(BlockFaceDirection::Right, blockPosition , BlockType::OakWood);
+//                 AddFace(BlockFaceDirection::Top, blockPosition , BlockType::OakWood);
+//                 AddFace(BlockFaceDirection::Bottom, blockPosition , BlockType::OakWood);
+//             }
+//         }
+//     }
+// }
+
+void Chunk::GenerateTrees()
+{
+    //One roll for the entire chunk
+    if ((std::rand() % 100) >= 50)
+        return;
+    
+    const int x = std::rand() % Constants::chunkSize;
+    const int z = std::rand() % Constants::chunkSize;
+    
+    const int grassY = static_cast<int>(heightMap[x][z]);
+    const int treeY = grassY + 1;
+    
+    chunkBlocks[x][treeY][z] = BlockType::OakWood;
 }
 
 #pragma region Rendering
