@@ -84,7 +84,8 @@ private:
     //existing BlockFaceData but it does not copy it and it cannot modify it. This is helpful since BlockFaceData uses arrays
     void BuildChunk();  //take data and process it for rendering
     void GenerateTrees();
-    
+    void GenerateTreeModel(int treeSpawnX, int treeSpawnY, int treeSpawnZ);
+
     bool hasMesh = false;
     bool IsBlockEmpty(int x, int y, int z) const;
     bool IsBlockEmpty(int x, int y, int z, const ChunkNeigbors& neigbors) const;

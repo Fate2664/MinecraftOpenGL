@@ -33,27 +33,38 @@ public:
         {
             BlockType::OakWood, std::map<BlockFaceDirection, glm::vec2>
             {
-                {BlockFaceDirection::Front, glm::vec2(4.0f,14.0f)},
+                {BlockFaceDirection::Front, glm::vec2(4.0f, 14.0f)},
                 {BlockFaceDirection::Back, glm::vec2(4.0f, 14.0f)},
-                {BlockFaceDirection::Left, glm::vec2(4.0f,14.0f)},
-                {BlockFaceDirection::Right, glm::vec2(4.0f,14.0f)},
-                {BlockFaceDirection::Top, glm::vec2(5.0f,14.0f)},
-                {BlockFaceDirection::Bottom, glm::vec2(5.0f,14.0f)}
+                {BlockFaceDirection::Left, glm::vec2(4.0f, 14.0f)},
+                {BlockFaceDirection::Right, glm::vec2(4.0f, 14.0f)},
+                {BlockFaceDirection::Top, glm::vec2(5.0f, 14.0f)},
+                {BlockFaceDirection::Bottom, glm::vec2(5.0f, 14.0f)}
+            }
+        },
+        {
+            BlockType::Leaf, std::map<BlockFaceDirection, glm::vec2>
+            {
+                {BlockFaceDirection::Front, glm::vec2(4.0f, 12.0f)},
+                {BlockFaceDirection::Back, glm::vec2(4.0f, 12.0f)},
+                {BlockFaceDirection::Left, glm::vec2(4.0f, 12.0f)},
+                {BlockFaceDirection::Right, glm::vec2(4.0f, 12.0f)},
+                {BlockFaceDirection::Top, glm::vec2(4.0f, 12.0f)},
+                {BlockFaceDirection::Bottom, glm::vec2(4.0f, 12.0f)}
             }
         }
     };
-    
+
     static std::array<glm::vec2, 4> GetFaceUVs(BlockType blockType, BlockFaceDirection face)
     {
         constexpr float atlasSize = 16.0f;
-    
+
         glm::vec2 tile = TextureData::blockTypeUVCoord.at(blockType).at(face);
-    
+
         float x0 = tile.x / atlasSize;
         float y0 = tile.y / atlasSize;
         float x1 = (tile.x + 1.0f) / atlasSize;
         float y1 = (tile.y + 1.0f) / atlasSize;
-    
+
         return {
             glm::vec2(x1, y1),
             glm::vec2(x0, y1),
@@ -61,5 +72,4 @@ public:
             glm::vec2(x1, y0)
         };
     }
-
 };
