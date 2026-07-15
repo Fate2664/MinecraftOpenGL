@@ -80,12 +80,6 @@ ChunkNeigbors WorldGeneration::GetNeigbors(const ChunkCoord& chunkCoord) const
     };
 }
 
-void WorldGeneration::GenerateTrees()
-{
-    
-}
-
-
 #pragma region Async Methods
 
 void WorldGeneration::QueueMissingChunks(int cameraChunkX, int cameraChunkZ)

@@ -5,9 +5,9 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "Camera.h"
+#include "../Player/Camera.h"
 #include "Chunk.h"
-#include "ShaderClass.h"
+#include "../Shaders/ShaderClass.h"
 
 class WorldGeneration
 {
@@ -30,9 +30,10 @@ private:
         std::future<ChunkGenerationResult> future;
     };
     
-    int loadDistance = 2;
+    int loadDistance = 10;
     std::unique_ptr<Texture> blockTexture;
     std::unordered_map<ChunkCoord, std::unique_ptr<Chunk>, ChunkCoordHash> chunks;
+    
     std::deque<ChunkCoord> generationQueue;
     std::unordered_set<ChunkCoord, ChunkCoordHash> generationScheduled;
     std::vector<ChunkGenerationJob> generationJobs;
@@ -46,7 +47,6 @@ private:
     
     const Chunk* FindChunk(const ChunkCoord& chunkCoord) const;
     ChunkNeigbors GetNeigbors(const ChunkCoord& chunkCoord) const;
-    void GenerateTrees();
     
     void QueueMissingChunks(int cameraChunkX, int cameraChunkZ);
     void StartGenerationJobs();

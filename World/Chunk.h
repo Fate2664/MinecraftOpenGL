@@ -1,20 +1,22 @@
 ﻿#pragma once
 #include <array>
+#include <memory>
+#include <vector>
+#include <glad/glad.h>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
-#include "Block.h"
-#include "BlockVertexDataRaw.h"
-#include "Constants.h"
-#include "ElementBufferObject.h"
-#include "Texture.h"
-#include "VertexArrayObject.h"
-#include "Noise.h"
+#include "../Blocks/BlockVertexDataRaw.h"
+#include "../Constants.h"
+#include "../OpenGL_Objects/ElementBufferObject.h"
+#include "../Blocks/Texture.h"
+#include "../OpenGL_Objects/VertexArrayObject.h"
+#include "../Blocks/TextureData.h"
+#include "../Shaders/ShaderClass.h"
 #include <glm/gtc/noise.hpp>
 
-class Chunk;
 class Camera;
-class Shader;
+class Chunk;
 
 struct ChunkCoord
 {

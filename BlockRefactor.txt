@@ -1,0 +1,355 @@
+﻿Separate block identity from geometry
+Move BlockType into a dedicated file such as BlockType.h:
+#pragma once
+
+#include <cstdint>
+
+enum class BlockType : std::uint8_t
+{
+    Empty,
+    Dirt,
+    Grass,
+    OakWood,
+    Leaf,
+
+    Count
+};
+Specifying std::uint8_t reduces each stored block type to one byte. Your chunk currently contains:
+16 × 64 × 16 = 16,384 blocks
+A one-byte type requires approximately 16 KB per chunk rather than the typical 64 KB of a four-byte enum.
+The Count value makes it easy to create an array of definitions.
+Create render and model categories
+Add something like BlockDefinition.h:
+#pragma once
+
+#include <array>
+#include <cstdint>
+
+#include "BlockType.h"
+
+enum class BlockRenderLayer : std::uint8_t
+{
+    Invisible,
+    Opaque,
+    Cutout,
+    Translucent
+};
+
+enum class BlockModelType : std::uint8_t
+{
+    None,
+    Cube,
+    CrossedQuads
+};
+
+struct AtlasTile
+{
+    std::uint8_t x;
+    std::uint8_t y;
+};
+
+struct BlockTextures
+{
+    AtlasTile front;
+    AtlasTile back;
+    AtlasTile left;
+    AtlasTile right;
+    AtlasTile top;
+    AtlasTile bottom;
+};
+
+struct BlockDefinition
+{
+    bool solid;
+    bool occludesNeighborFaces;
+    bool replaceable;
+
+    BlockRenderLayer renderLayer;
+    BlockModelType modelType;
+
+    BlockTextures textures;
+};
+These properties should remain independent:
+•
+solid controls collision.
+•
+occludesNeighborFaces controls meshing.
+•
+replaceable controls whether generation can replace it.
+•
+renderLayer controls rendering.
+•
+modelType controls geometry.
+For example, leaves can be solid for collision while not fully hiding neighboring block faces.
+Replace Block instances with a registry
+Your current Block.cpp constructs transformed geometry and a map for every instance. Replace that role with one definition per block type.
+For example:
+class BlockRegistry
+{
+public:
+    static const BlockDefinition& Get(
+        BlockType type);
+
+    static bool IsAir(BlockType type);
+};
+The registry could store:
+inline const std::array<
+    BlockDefinition,
+    static_cast<std::size_t>(BlockType::Count)>
+blockDefinitions = {
+    // Empty
+    BlockDefinition{
+        false,
+        false,
+        true,
+        BlockRenderLayer::Invisible,
+        BlockModelType::None,
+        {}
+    },
+
+    // Dirt
+    BlockDefinition{
+        true,
+        true,
+        false,
+        BlockRenderLayer::Opaque,
+        BlockModelType::Cube,
+        {
+            {2, 15}, {2, 15},
+            {2, 15}, {2, 15},
+            {2, 15}, {2, 15}
+        }
+    },
+
+    // Grass
+    BlockDefinition{
+        true,
+        true,
+        false,
+        BlockRenderLayer::Opaque,
+        BlockModelType::Cube,
+        {
+            {3, 15}, {3, 15},
+            {3, 15}, {3, 15},
+            {0, 15}, {2, 15}
+        }
+    },
+
+    // OakWood
+    BlockDefinition{
+        true,
+        true,
+        false,
+        BlockRenderLayer::Opaque,
+        BlockModelType::Cube,
+        {
+            {4, 14}, {4, 14},
+            {4, 14}, {4, 14},
+            {5, 14}, {5, 14}
+        }
+    },
+
+    // Leaf
+    BlockDefinition{
+        true,
+        false,
+        false,
+        BlockRenderLayer::Cutout,
+        BlockModelType::Cube,
+        {
+            {4, 12}, {4, 12},
+            {4, 12}, {4, 12},
+            {4, 12}, {4, 12}
+        }
+    }
+};
+You may need to adjust the initializer layout to match your eventual structure, but this shows the intended ownership.
+Then:
+const BlockDefinition& BlockRegistry::Get(
+    BlockType type)
+{
+    return blockDefinitions.at(
+        static_cast<std::size_t>(type));
+}
+Merge TextureData into the block definitions
+Your current TextureData.h is effectively already part of a block-definition registry.
+Instead of maintaining:
+std::map<
+    BlockType,
+    std::map<BlockFaceDirection, glm::vec2>>
+store six atlas tiles directly in BlockDefinition.
+Benefits include:
+•
+No map lookups during meshing.
+•
+No heap-allocated map nodes.
+•
+Compile-time-defined block properties.
+•
+All information for a block type lives in one place.
+Add a method that returns the correct tile:
+AtlasTile GetTextureTile(
+    const BlockDefinition& definition,
+    BlockFaceDirection face);
+Then convert that tile into UV coordinates using your existing atlas calculation.
+Keep raw cube geometry separate
+Rename:
+BlockVertexDataRaw
+to something like:
+BlockGeometry
+It should contain only reusable geometry:
+struct BlockGeometry
+{
+    static const std::array<
+        std::array<glm::vec3, 4>,
+        6> cubeFaces;
+};
+Using an array indexed by BlockFaceDirection is preferable to a std::map.
+Add a final enum entry:
+enum class BlockFaceDirection : std::uint8_t
+{
+    Front,
+    Back,
+    Left,
+    Right,
+    Top,
+    Bottom,
+
+    Count
+};
+Then access geometry with:
+const auto& vertices =
+    BlockGeometry::cubeFaces[
+        static_cast<std::size_t>(face)];
+Replace IsBlockEmpty with face-visibility rules
+Your current mesher only asks:
+IsBlockEmpty(neighborX, neighborY, neighborZ)
+That is insufficient once transparent blocks exist.
+Consider an opaque dirt block next to leaves:
+Dirt | Leaf
+The leaf texture contains holes. If the dirt face is removed merely because the leaf voxel is non-empty, you can see through the leaf holes into the missing dirt face.
+Instead, obtain the neighboring block type and ask whether the face should render:
+bool ShouldRenderFace(
+    BlockType current,
+    BlockType neighbor)
+{
+    if (neighbor == BlockType::Empty)
+        return true;
+
+    const BlockDefinition& neighborDefinition =
+        BlockRegistry::Get(neighbor);
+
+    if (neighborDefinition.occludesNeighborFaces)
+        return false;
+
+    // Avoid faces inside a group of identical leaves.
+    if (current == neighbor)
+        return false;
+
+    return true;
+}
+This gives useful behavior:
+Current block
+Neighbor
+Render current face?
+Dirt
+Air
+Yes
+Dirt
+Dirt
+No
+Dirt
+Leaf
+Yes
+Leaf
+Dirt
+No
+Leaf
+Leaf
+No
+Leaf
+Air
+Yes
+For this to work across chunks, replace the neighbor-aware IsBlockEmpty() with something like:
+BlockType GetBlockType(
+    int x,
+    int y,
+    int z,
+    const ChunkNeigbors& neighbors) const;
+Out-of-bounds or unloaded space returns:
+BlockType::Empty
+Then each face check becomes conceptually:
+const BlockType neighbor =
+    GetBlockType(x - 1, y, z, neighbors);
+
+if (ShouldRenderFace(blockType, neighbor))
+{
+    AddFace(
+        BlockFaceDirection::Left,
+        blockPosition,
+        blockType);
+}
+This is the most important meshing refactor after adding block definitions.
+Prepare separate render layers
+You can initially render opaque and cutout blocks in the same mesh because the fragment shader’s discard handles the leaf holes.
+Eventually, give each chunk separate mesh collections:
+ChunkMesh opaqueMesh;
+ChunkMesh cutoutMesh;
+ChunkMesh translucentMesh;
+Render them in this order:
+1. Opaque blocks
+2. Alpha-cutout blocks
+3. Translucent blocks
+For true translucent blocks such as water, the third pass will require:
+glEnable(GL_BLEND);
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+Keep depth testing enabled, but normally disable depth writes while drawing translucency:
+glDepthMask(GL_FALSE);
+
+// Draw translucent geometry
+
+glDepthMask(GL_TRUE);
+Translucent geometry also needs approximate back-to-front ordering. That is why leaves should use cutout rendering first—it avoids that complexity.
+Prepare for non-cube foliage
+Leaves can remain BlockModelType::Cube.
+Flowers and tall grass usually work better as crossed quads:
+\ /
+ X
+/ \
+When meshing:
+switch (definition.modelType)
+{
+case BlockModelType::Cube:
+    GenerateCubeFaces(...);
+    break;
+
+case BlockModelType::CrossedQuads:
+    GenerateCrossedQuads(...);
+    break;
+
+case BlockModelType::None:
+    break;
+}
+Both crossed quads can use alpha cutout.
+Suggested incremental order
+1.
+Add alpha discard to the fragment shader.
+2.
+Create BlockType.h.
+3.
+Create BlockDefinition and BlockRegistry.
+4.
+Move texture coordinates from TextureData into definitions.
+5.
+Replace IsBlockEmpty() face decisions with ShouldRenderFace().
+6.
+Rename BlockVertexDataRaw to BlockGeometry.
+7.
+Add separate opaque, cutout, and translucent chunk meshes.
+8.
+Add CrossedQuads for grass and flowers.
+9.
+Add sparse block-entity data for chests, furnaces, and signs.
+10.
+Add block-state values such as log orientation, water level, and door direction.
+The immediate leaf fix only requires the shader discard. The block-definition and visibility refactors are what will prevent the design from becoming a collection of special cases as you add glass, water, flowers, slabs, stairs, and interactive blocks. No files were edited.

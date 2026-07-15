@@ -1,7 +1,11 @@
-#include"ShaderClass.h"
-#include"Camera.h"
+#include <iostream>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 #include"Constants.h"
-#include "WorldGeneration.h"
+#include "Player/Camera.h"
+#include "Shaders/ShaderClass.h"
+#include "World/WorldGeneration.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int w, int h);
 
@@ -31,7 +35,7 @@ int main()
     glViewport(0, 0, Constants::windowWidth, Constants::windowHeight);
 #pragma endregion
     
-    Shader shaderProgram("default.vert", "default.frag");
+    Shader shaderProgram("Shaders/default.vert", "Shaders/default.frag");
     Camera camera(Constants::windowWidth, Constants::windowHeight, glm::vec3(0.0f, 0.0f, 2.0f));
     WorldGeneration world(10);
     

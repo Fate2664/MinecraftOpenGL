@@ -9,9 +9,7 @@
 #include<glm/gtc/type_ptr.hpp>
 #include<glm/gtx/rotate_vector.hpp>
 #include<glm/gtx/vector_angle.hpp>
-
-#include "Chunk.h"
-#include"shaderClass.h"
+#include"../Shaders/ShaderClass.h"
 
 class Camera {
 	public:

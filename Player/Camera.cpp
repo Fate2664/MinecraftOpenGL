@@ -1,6 +1,5 @@
 #include "Camera.h"
 
-#include "Chunk.h"
 
 Camera::Camera(int width, int height, glm::vec3 position)
 {

@@ -4,7 +4,7 @@
 
 #include "BlockVertexDataRaw.h"
 
-static class TextureData
+class TextureData
 {
 public:
     inline static std::map<BlockType, std::map<BlockFaceDirection, glm::vec2>> blockTypeUVCoord = {

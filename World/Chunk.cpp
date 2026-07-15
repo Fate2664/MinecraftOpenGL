@@ -1,10 +1,9 @@
 ﻿#include "Chunk.h"
-
+#include "../Player/Camera.h"
 #include <filesystem>
 #include <random>
 #include <glm/gtx/transform.hpp>
-#include "Camera.h"
-#include "TextureData.h"
+
 
 Chunk::Chunk(glm::vec3 position, GeneratedChunkData&& data)
     : position(position),

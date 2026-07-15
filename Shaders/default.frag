@@ -11,5 +11,10 @@ uniform vec3 camPos;
 
 void main()
 {
-    FragColor = texture(diffuse0, texCoord);
+    vec4 textureColor = texture(diffuse0, texCoord);
+    
+    if(textureColor.a < 0.5)
+        discard;
+    
+    FragColor = textureColor;
 }
