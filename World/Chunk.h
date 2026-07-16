@@ -6,13 +6,15 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
-#include "../Blocks/BlockVertexDataRaw.h"
+#include "../Blocks/BlockRawGeometry.h"
 #include "../Constants.h"
 #include "../OpenGL_Objects/ElementBufferObject.h"
 #include "../Blocks/Texture.h"
 #include "../OpenGL_Objects/VertexArrayObject.h"
 #include "../Blocks/TextureData.h"
 #include "../Shaders/ShaderClass.h"
+#include "../Player/Camera.h"
+#include "../Blocks/BlockType.h"
 #include <glm/gtc/noise.hpp>
 
 class Camera;
@@ -90,5 +92,5 @@ private:
 
     bool hasMesh = false;
     bool IsBlockEmpty(int x, int y, int z) const;
-    bool IsBlockEmpty(int x, int y, int z, const ChunkNeigbors& neigbors) const;
+    BlockType GetBlockType(int x, int y, int z, const ChunkNeigbors& neigbors) const;
 };

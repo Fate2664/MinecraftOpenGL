@@ -2,63 +2,21 @@
 #include <map>
 #include <vector>
 
-#include "BlockVertexDataRaw.h"
+#include "BlockDefinition.h"
+#include "BlockRegistry.h"
+#include "BlockType.h"
+
 
 class TextureData
 {
 public:
-    inline static std::map<BlockType, std::map<BlockFaceDirection, glm::vec2>> blockTypeUVCoord = {
-        {
-            BlockType::Dirt, std::map<BlockFaceDirection, glm::vec2>
-            {
-                {BlockFaceDirection::Front, glm::vec2(2.0f, 15.0f)},
-                {BlockFaceDirection::Back, glm::vec2(2.0f, 15.0f)},
-                {BlockFaceDirection::Left, glm::vec2(2.0f, 15.0f)},
-                {BlockFaceDirection::Right, glm::vec2(2.0f, 15.0f)},
-                {BlockFaceDirection::Top, glm::vec2(2.0f, 15.0f)},
-                {BlockFaceDirection::Bottom, glm::vec2(2.0f, 15.0f)}
-            }
-        },
-        {
-            BlockType::Grass, std::map<BlockFaceDirection, glm::vec2>
-            {
-                {BlockFaceDirection::Front, glm::vec2(3.0f, 15.0f)},
-                {BlockFaceDirection::Back, glm::vec2(3.0f, 15.0f)},
-                {BlockFaceDirection::Left, glm::vec2(3.0f, 15.0f)},
-                {BlockFaceDirection::Right, glm::vec2(3.0f, 15.0f)},
-                {BlockFaceDirection::Top, glm::vec2(0.0f, 15.0f)},
-                {BlockFaceDirection::Bottom, glm::vec2(2.0f, 15.0f)}
-            }
-        },
-        {
-            BlockType::OakWood, std::map<BlockFaceDirection, glm::vec2>
-            {
-                {BlockFaceDirection::Front, glm::vec2(4.0f, 14.0f)},
-                {BlockFaceDirection::Back, glm::vec2(4.0f, 14.0f)},
-                {BlockFaceDirection::Left, glm::vec2(4.0f, 14.0f)},
-                {BlockFaceDirection::Right, glm::vec2(4.0f, 14.0f)},
-                {BlockFaceDirection::Top, glm::vec2(5.0f, 14.0f)},
-                {BlockFaceDirection::Bottom, glm::vec2(5.0f, 14.0f)}
-            }
-        },
-        {
-            BlockType::Leaf, std::map<BlockFaceDirection, glm::vec2>
-            {
-                {BlockFaceDirection::Front, glm::vec2(4.0f, 12.0f)},
-                {BlockFaceDirection::Back, glm::vec2(4.0f, 12.0f)},
-                {BlockFaceDirection::Left, glm::vec2(4.0f, 12.0f)},
-                {BlockFaceDirection::Right, glm::vec2(4.0f, 12.0f)},
-                {BlockFaceDirection::Top, glm::vec2(4.0f, 12.0f)},
-                {BlockFaceDirection::Bottom, glm::vec2(4.0f, 12.0f)}
-            }
-        }
-    };
 
     static std::array<glm::vec2, 4> GetFaceUVs(BlockType blockType, BlockFaceDirection face)
     {
         constexpr float atlasSize = 16.0f;
-
-        glm::vec2 tile = TextureData::blockTypeUVCoord.at(blockType).at(face);
+        const BlockDefinition& definition = BlockRegistry::Get(blockType);
+        const std::size_t faceIndex = static_cast<std::size_t>(face);
+        const AtlasTile tile = definition.textureFaces.at(faceIndex);
 
         float x0 = tile.x / atlasSize;
         float y0 = tile.y / atlasSize;

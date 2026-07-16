@@ -155,7 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Blocks\Block.cpp">
+    <ClCompile Include="Blocks\BlockRegistry.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -994,8 +994,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Blocks\Block.h" />
-    <ClInclude Include="Blocks\BlockVertexDataRaw.h" />
+    <ClInclude Include="Blocks\BlockFaceDirection.h" />
+    <ClInclude Include="Blocks\BlockRegistry.h" />
+    <ClInclude Include="Blocks\BlockDefinition.h" />
+    <ClInclude Include="Blocks\BlockType.h" />
+    <ClInclude Include="Blocks\BlockRawGeometry.h" />
     <ClInclude Include="Blocks\Texture.h" />
     <ClInclude Include="Blocks\TextureData.h" />
     <ClInclude Include="Constants.h" />
@@ -1011,7 +1014,6 @@
     <None Include="Shaders\light.vert" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="BlockRefactor.txt" />
     <Content Include="Textures\dirtBlock.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,9 +1,7 @@
 ﻿#include "Chunk.h"
-#include "../Player/Camera.h"
 #include <filesystem>
 #include <random>
 #include <glm/gtx/transform.hpp>
-
 
 Chunk::Chunk(glm::vec3 position, GeneratedChunkData&& data)
     : position(position),
@@ -93,35 +91,42 @@ void Chunk::GenerateFaces(const ChunkNeigbors& neigbors)
                 {
                     const glm::vec3 blockPosition(x, static_cast<float>(y) - Constants::chunkheight + 0.5f, z);
                     const BlockType blockType = chunkBlocks[x][y][z];
-
+                    BlockType neighbourType = BlockType::Empty;
+                    
                     //Left faces
                     //Requirements: block to left is empty & is furthest left in chunk
-                    if (IsBlockEmpty(x - 1, y, z, neigbors))
+                    neighbourType = GetBlockType(x - 1, y, z, neigbors);
+                        if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
                         AddFace(BlockFaceDirection::Left, blockPosition, blockType);
 
                     //Right faces
                     //Requirements: block to right is empty & is furthest right in chunk
-                    if (IsBlockEmpty(x + 1, y, z, neigbors))
+                    neighbourType = GetBlockType(x + 1, y, z, neigbors);
+                    if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
                         AddFace(BlockFaceDirection::Right, blockPosition, blockType);
 
                     //Top faces
                     //Requirements: block above is empty & is furthest up in chunk
-                    if (y == Constants::chunkheight - 1 || IsBlockEmpty(x, y + 1, z))
+                    neighbourType = GetBlockType(x, y + 1, z, neigbors);
+                    if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
                         AddFace(BlockFaceDirection::Top, blockPosition, blockType);
 
                     //Bottom faces
                     //Requirements: block below is empty & is furthest down in chunk
-                    if (IsBlockEmpty(x, y - 1, z, neigbors))
+                    neighbourType = GetBlockType(x, y - 1, z, neigbors);
+                    if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
                         AddFace(BlockFaceDirection::Bottom, blockPosition, blockType);
 
                     //Front faces
                     //Requirements: block infront is empty & is furthest forward in chunk
-                    if (IsBlockEmpty(x, y, z + 1, neigbors))
+                    neighbourType = GetBlockType(x, y, z + 1, neigbors);
+                    if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
                         AddFace(BlockFaceDirection::Front, blockPosition, blockType);
 
                     //Back faces
                     //Requirements: block behind is empty & is furthest back in chunk
-                    if (IsBlockEmpty(x, y, z - 1, neigbors))
+                    neighbourType = GetBlockType(x, y, z - 1, neigbors);
+                    if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
                         AddFace(BlockFaceDirection::Back, blockPosition, blockType);
                 }
             }
@@ -134,7 +139,7 @@ void Chunk::AddFace(BlockFaceDirection face, const glm::vec3& blockPosition, Blo
     //static_cast converts chunkVertices.size() into a GLuint
     GLuint startIndex = static_cast<GLuint>(chunkVertices.size());
 
-    const auto& rawVertices = BlockVertexDataRaw::blockVertexData.at(face);
+    const auto& rawVertices = BlockRawGeometry::cubeFaces.at(static_cast<std::size_t>(face));
     const auto& uv = TextureData::GetFaceUVs(blockType, face);
 
     for (int i = 0; i < 4; i++)
@@ -327,27 +332,38 @@ bool Chunk::IsBlockEmpty(int x, int y, int z) const
     return chunkBlocks[x][y][z] == BlockType::Empty;
 }
 
-bool Chunk::IsBlockEmpty(int x, int y, int z, const ChunkNeigbors& neigbors) const
+BlockType Chunk::GetBlockType(int x, int y, int z, const ChunkNeigbors& neigbors) const
 {
-    if (y < 0 || y >= Constants::chunkheight) return true;
+    if (y < 0 || y >= Constants::chunkheight) return BlockType::Empty;
+    
     if (x < 0)
     {
-        //returns true if left neighbour is null or if left neighbour block is empty at Constants::chunkSize - 1, y, z coords
-        return neigbors.left == nullptr || neigbors.left->IsBlockEmpty(Constants::chunkSize - 1, y, z);
+        if (!neigbors.left) return BlockType::Empty;
+        
+        return neigbors.left->chunkBlocks[Constants::chunkSize - 1][y][z];
     }
+    
     if (x >= Constants::chunkSize)
     {
-        return neigbors.right == nullptr || neigbors.right->IsBlockEmpty(0, y, z);
+        if (!neigbors.right) return BlockType::Empty;
+        
+        return neigbors.right->chunkBlocks[0][y][z];
     }
+    
     if (z < 0)
     {
-        return neigbors.back == nullptr || neigbors.back->IsBlockEmpty(x, y, Constants::chunkSize - 1);
+        if (!neigbors.back) return BlockType::Empty;
+        
+        return neigbors.back->chunkBlocks[x][y][Constants::chunkSize - 1];
     }
+    
     if (z >= Constants::chunkSize)
     {
-        return neigbors.front == nullptr || neigbors.front->IsBlockEmpty(x, y, 0);
+        if (!neigbors.front) return BlockType::Empty;
+        
+        return neigbors.front->chunkBlocks[x][y][0];
     }
 
-    return IsBlockEmpty(x, y, z);
+    return chunkBlocks[x][y][z];
 }
 #pragma endregion
