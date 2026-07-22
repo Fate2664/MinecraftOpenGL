@@ -89,6 +89,26 @@ public:
             BlockRenderLayer::Cutout,
             BlockModelType::Cube,
             AllFaceTextures(AtlasTile{4, 12})
+        },
+        
+        //Stone
+        BlockDefinition{
+            true,
+            true,
+            false,
+            BlockRenderLayer::Opaque,
+            BlockModelType::Cube,
+            AllFaceTextures(AtlasTile{1, 15})
+        },
+        
+        //Coal
+        BlockDefinition{
+            true,
+            true,
+            false,
+            BlockRenderLayer::Opaque,
+            BlockModelType::Cube,
+            AllFaceTextures(AtlasTile{2, 13})
         }
 
     };

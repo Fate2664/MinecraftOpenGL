@@ -37,7 +37,7 @@ int main()
     
     Shader shaderProgram("Shaders/default.vert", "Shaders/default.frag");
     Camera camera(Constants::windowWidth, Constants::windowHeight, glm::vec3(0.0f, 0.0f, 2.0f));
-    WorldGeneration world(10);
+    WorldGeneration world(2);
     
     glEnable(GL_DEPTH_TEST);
     glFrontFace(GL_CW);

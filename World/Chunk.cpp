@@ -17,6 +17,7 @@ GeneratedChunkData Chunk::GenerateData(glm::vec3 position)
 
     const int minTerrainHeight = 35;
     const int maxTerrainHeight = Constants::chunkheight - 12;
+    const int maxStoneHeight = 3; //3 below terrain height
 
     for (int x = 0; x < Constants::chunkSize; x++)
     {
@@ -58,9 +59,37 @@ GeneratedChunkData Chunk::GenerateData(glm::vec3 position)
                 {
                     data.blocks[x][y][z] = BlockType::Grass;
                 }
-                else
+                else if (y < terrainHeight && y > (terrainHeight - maxStoneHeight))
                 {
                     data.blocks[x][y][z] = BlockType::Dirt;
+                }
+                else
+                {
+                    data.blocks[x][y][z] = BlockType::Stone;
+                }
+            }
+        }
+    }
+    
+    //Ore spawning
+    const float coalOreSpawnPerc = 0.013f; //1.3%
+    std::random_device rd;
+    std::mt19937 randomEngine(rd());
+    std::uniform_real_distribution<float> distr(0.0f, 1.0f);
+    
+    for (int x = 0; x < Constants::chunkSize; x++)
+    {
+        for (int z = 0; z < Constants::chunkSize; z++)
+        {
+            for (int y = 0; y < Constants::chunkheight; y++)
+            {
+                if (data.blocks[x][y][z] == BlockType::Stone)
+                {
+                    //have a chance to replace stone block with coal
+                    if (distr(randomEngine) <= (coalOreSpawnPerc))
+                    {
+                        data.blocks[x][y][z] = BlockType::Coal;
+                    }
                 }
             }
         }
@@ -92,42 +121,56 @@ void Chunk::GenerateFaces(const ChunkNeigbors& neigbors)
                     const glm::vec3 blockPosition(x, static_cast<float>(y) - Constants::chunkheight + 0.5f, z);
                     const BlockType blockType = chunkBlocks[x][y][z];
                     BlockType neighbourType = BlockType::Empty;
-                    
-                    //Left faces
-                    //Requirements: block to left is empty & is furthest left in chunk
-                    neighbourType = GetBlockType(x - 1, y, z, neigbors);
-                        if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
-                        AddFace(BlockFaceDirection::Left, blockPosition, blockType);
 
-                    //Right faces
-                    //Requirements: block to right is empty & is furthest right in chunk
-                    neighbourType = GetBlockType(x + 1, y, z, neigbors);
-                    if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
+                    //Leaves render all faces
+                    if (blockType == BlockType::Leaf)
+                    {
+                        //Add all faces
                         AddFace(BlockFaceDirection::Right, blockPosition, blockType);
-
-                    //Top faces
-                    //Requirements: block above is empty & is furthest up in chunk
-                    neighbourType = GetBlockType(x, y + 1, z, neigbors);
-                    if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
+                        AddFace(BlockFaceDirection::Left, blockPosition, blockType);
                         AddFace(BlockFaceDirection::Top, blockPosition, blockType);
-
-                    //Bottom faces
-                    //Requirements: block below is empty & is furthest down in chunk
-                    neighbourType = GetBlockType(x, y - 1, z, neigbors);
-                    if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
                         AddFace(BlockFaceDirection::Bottom, blockPosition, blockType);
-
-                    //Front faces
-                    //Requirements: block infront is empty & is furthest forward in chunk
-                    neighbourType = GetBlockType(x, y, z + 1, neigbors);
-                    if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
                         AddFace(BlockFaceDirection::Front, blockPosition, blockType);
-
-                    //Back faces
-                    //Requirements: block behind is empty & is furthest back in chunk
-                    neighbourType = GetBlockType(x, y, z - 1, neigbors);
-                    if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
                         AddFace(BlockFaceDirection::Back, blockPosition, blockType);
+                    }
+                    else
+                    {
+                        //Left faces
+                        //Requirements: block to left is empty & is furthest left in chunk
+                        neighbourType = GetBlockType(x - 1, y, z, neigbors);
+                        if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
+                            AddFace(BlockFaceDirection::Left, blockPosition, blockType);
+
+                        //Right faces
+                        //Requirements: block to right is empty & is furthest right in chunk
+                        neighbourType = GetBlockType(x + 1, y, z, neigbors);
+                        if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
+                            AddFace(BlockFaceDirection::Right, blockPosition, blockType);
+
+                        //Top faces
+                        //Requirements: block above is empty & is furthest up in chunk
+                        neighbourType = GetBlockType(x, y + 1, z, neigbors);
+                        if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
+                            AddFace(BlockFaceDirection::Top, blockPosition, blockType);
+
+                        //Bottom faces
+                        //Requirements: block below is empty & is furthest down in chunk
+                        neighbourType = GetBlockType(x, y - 1, z, neigbors);
+                        if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
+                            AddFace(BlockFaceDirection::Bottom, blockPosition, blockType);
+
+                        //Front faces
+                        //Requirements: block infront is empty & is furthest forward in chunk
+                        neighbourType = GetBlockType(x, y, z + 1, neigbors);
+                        if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
+                            AddFace(BlockFaceDirection::Front, blockPosition, blockType);
+
+                        //Back faces
+                        //Requirements: block behind is empty & is furthest back in chunk
+                        neighbourType = GetBlockType(x, y, z - 1, neigbors);
+                        if (BlockRegistry::ShouldRenderFace(blockType, neighbourType))
+                            AddFace(BlockFaceDirection::Back, blockPosition, blockType);
+                    }
                 }
             }
         }
@@ -335,32 +378,32 @@ bool Chunk::IsBlockEmpty(int x, int y, int z) const
 BlockType Chunk::GetBlockType(int x, int y, int z, const ChunkNeigbors& neigbors) const
 {
     if (y < 0 || y >= Constants::chunkheight) return BlockType::Empty;
-    
+
     if (x < 0)
     {
         if (!neigbors.left) return BlockType::Empty;
-        
+
         return neigbors.left->chunkBlocks[Constants::chunkSize - 1][y][z];
     }
-    
+
     if (x >= Constants::chunkSize)
     {
         if (!neigbors.right) return BlockType::Empty;
-        
+
         return neigbors.right->chunkBlocks[0][y][z];
     }
-    
+
     if (z < 0)
     {
         if (!neigbors.back) return BlockType::Empty;
-        
+
         return neigbors.back->chunkBlocks[x][y][Constants::chunkSize - 1];
     }
-    
+
     if (z >= Constants::chunkSize)
     {
         if (!neigbors.front) return BlockType::Empty;
-        
+
         return neigbors.front->chunkBlocks[x][y][0];
     }
 

@@ -11,6 +11,11 @@ namespace Constants
  constexpr int chunkSize = 16;
  constexpr int chunkheight = 64;
  
+ /* NOTE 
+  * Minecraft average terrain y height is 60 - 70
+  * Minecraft sea level is y = 63
+  * Mincraft theoretical build limit is y = 320
+  */
     
 }
 

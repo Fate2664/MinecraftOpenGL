@@ -27,7 +27,7 @@ struct AtlasTile
 struct BlockDefinition
 {
     bool solid;
-    bool occludeNeighbourFaces;
+    bool occludeNeighbourFaces; //Check this works
     bool replaceable;   
     
     BlockRenderLayer renderLayer;
