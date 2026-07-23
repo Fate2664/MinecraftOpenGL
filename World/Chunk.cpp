@@ -70,25 +70,61 @@ GeneratedChunkData Chunk::GenerateData(glm::vec3 position)
             }
         }
     }
-    
+
     //Ore spawning
-    const float coalOreSpawnPerc = 0.013f; //1.3%
+    const float coalOreSpawnPerc = 0.0013f; //0.13%
+    const int maxBlocksPerVein = 6;
     std::random_device rd;
     std::mt19937 randomEngine(rd());
     std::uniform_real_distribution<float> distr(0.0f, 1.0f);
-    
+
     for (int x = 0; x < Constants::chunkSize; x++)
     {
         for (int z = 0; z < Constants::chunkSize; z++)
         {
             for (int y = 0; y < Constants::chunkheight; y++)
             {
+                int veinBlockCount = 0;
+                const int maxGrowthAttempts = 10;
+                int totalGrowthAttempts = 0;
                 if (data.blocks[x][y][z] == BlockType::Stone)
                 {
-                    //have a chance to replace stone block with coal
+                    //Have a chance to replace stone block with coal
                     if (distr(randomEngine) <= (coalOreSpawnPerc))
                     {
                         data.blocks[x][y][z] = BlockType::Coal;
+
+                        //Create an ore vein:
+                        auto targetBlock = data.blocks[x][y][z];
+                        auto startingBlock = data.blocks[x][y][z];
+                        
+                        while (veinBlockCount <= maxBlocksPerVein && totalGrowthAttempts <= maxGrowthAttempts)
+                        {
+                            //Choose a random direction to grow
+                            std::uniform_int_distribution<int> directionDistr(0, 1);
+                            int randDirection = directionDistr(randomEngine) ? -1 : 1;
+                            std::uniform_int_distribution<int> axisDistr(0, 2);
+                            int randAxis = axisDistr(randomEngine);
+                            
+                            switch (randAxis)
+                            {
+                                //Check bounds
+                            case 0: targetBlock = startingBlock[x + randDirection][y][z];
+                                break;
+                            case 1: targetBlock = startingBlock[x][y + randDirection][z];
+                                break;
+                            case 2: targetBlock = startingBlock[x][y][z + randDirection];
+                                break;
+                            }
+                            
+                            if (targetBlock == BlockType::Stone)
+                            {
+                                data.blocks.at(targetBlock.data()) = BlockType::Coal;
+                                startingBlock[x][y][z] = targetBlock[x][y][z];
+                                veinBlockCount++;
+                            }
+                            totalGrowthAttempts++;
+                        }
                     }
                 }
             }
