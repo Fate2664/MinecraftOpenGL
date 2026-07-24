@@ -89,6 +89,7 @@ private:
     void BuildChunk();  //take data and process it for rendering
     void GenerateTrees();
     void GenerateTreeModel(int treeSpawnX, int treeSpawnY, int treeSpawnZ);
+    static void GenerateOres(ChunkBlockData& blocks, BlockType ore, float oreSpawnPerc, int maxBlocksPerVein);
 
     bool hasMesh = false;
     bool IsBlockEmpty(int x, int y, int z) const;

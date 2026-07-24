@@ -70,10 +70,18 @@ GeneratedChunkData Chunk::GenerateData(glm::vec3 position)
             }
         }
     }
+    
+    //Generate Ores:
+    GenerateOres(data.blocks, BlockType::Coal, 0.0013f, 6);
+    GenerateOres(data.blocks, BlockType::Iron, 0.0009f, 6);
+    GenerateOres(data.blocks, BlockType::Diamond, 0.0005f, 3);
+    
+    return data;
+}
 
+void Chunk::GenerateOres(ChunkBlockData& blocks, BlockType ore, const float oreSpawnPerc,const int maxBlocksPerVein)
+{
     //Ore spawning
-    const float coalOreSpawnPerc = 0.0013f; //0.13%
-    const int maxBlocksPerVein = 6;
     std::random_device rd;
     std::mt19937 randomEngine(rd());
     std::uniform_real_distribution<float> distr(0.0f, 1.0f);
@@ -87,40 +95,46 @@ GeneratedChunkData Chunk::GenerateData(glm::vec3 position)
                 int veinBlockCount = 0;
                 const int maxGrowthAttempts = 10;
                 int totalGrowthAttempts = 0;
-                if (data.blocks[x][y][z] == BlockType::Stone)
+                if (blocks[x][y][z] == BlockType::Stone)
                 {
                     //Have a chance to replace stone block with coal
-                    if (distr(randomEngine) <= (coalOreSpawnPerc))
+                    if (distr(randomEngine) <= (oreSpawnPerc))
                     {
-                        data.blocks[x][y][z] = BlockType::Coal;
+                        blocks[x][y][z] = ore;
 
                         //Create an ore vein:
-                        auto targetBlock = data.blocks[x][y][z];
-                        auto startingBlock = data.blocks[x][y][z];
-                        
+                        //(We use an ivec3 for an integer vector)
+                        glm::ivec3 currentPosition{x, y, z};
+
                         while (veinBlockCount <= maxBlocksPerVein && totalGrowthAttempts <= maxGrowthAttempts)
                         {
                             //Choose a random direction to grow
+                            glm::ivec3 direction{0, 0, 0};
                             std::uniform_int_distribution<int> directionDistr(0, 1);
-                            int randDirection = directionDistr(randomEngine) ? -1 : 1;
+                            int directionSign = directionDistr(randomEngine) ? -1 : 1;
                             std::uniform_int_distribution<int> axisDistr(0, 2);
                             int randAxis = axisDistr(randomEngine);
-                            
-                            switch (randAxis)
+
+                            //This puts both axis and sign together WOW
+                            direction[randAxis] = directionSign;
+
+                            const glm::ivec3 targetPosition = currentPosition + direction;
+
+                            //Bounds check
+                            const bool insideChunk =
+                                targetPosition.x >= 0 &&
+                                targetPosition.x < Constants::chunkSize &&
+                                targetPosition.y >= 0 &&
+                                targetPosition.y < Constants::chunkheight &&
+                                targetPosition.z >= 0 &&
+                                targetPosition.z < Constants::chunkSize;
+
+                            if (insideChunk && blocks[targetPosition.x][targetPosition.y][targetPosition.z] == BlockType::Stone)
                             {
-                                //Check bounds
-                            case 0: targetBlock = startingBlock[x + randDirection][y][z];
-                                break;
-                            case 1: targetBlock = startingBlock[x][y + randDirection][z];
-                                break;
-                            case 2: targetBlock = startingBlock[x][y][z + randDirection];
-                                break;
-                            }
-                            
-                            if (targetBlock == BlockType::Stone)
-                            {
-                                data.blocks.at(targetBlock.data()) = BlockType::Coal;
-                                startingBlock[x][y][z] = targetBlock[x][y][z];
+                                blocks[targetPosition.x][targetPosition.y][targetPosition.z] = ore;
+                                
+                                //Continue growing from the newly placed coal
+                                currentPosition = targetPosition;
                                 veinBlockCount++;
                             }
                             totalGrowthAttempts++;
@@ -130,7 +144,6 @@ GeneratedChunkData Chunk::GenerateData(glm::vec3 position)
             }
         }
     }
-    return data;
 }
 
 void Chunk::RebuildMesh(const ChunkNeigbors& neigbors)

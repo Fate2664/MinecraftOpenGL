@@ -109,6 +109,26 @@ public:
             BlockRenderLayer::Opaque,
             BlockModelType::Cube,
             AllFaceTextures(AtlasTile{2, 13})
+        },
+        
+        //Iron
+        BlockDefinition{
+        true,
+            true,
+            false,
+            BlockRenderLayer::Opaque,
+            BlockModelType::Cube,
+            AllFaceTextures(AtlasTile{1, 13})
+        },
+        
+        //Diamonds
+        BlockDefinition{
+            true,
+            true,
+            false,
+            BlockRenderLayer::Opaque,
+            BlockModelType::Cube,
+            AllFaceTextures(AtlasTile{2, 12})
         }
 
     };
