@@ -22,3 +22,19 @@ bool BlockRegistry::ShouldRenderFace(BlockType current, BlockType neighbour)
 
     return true;
 }
+
+glm::vec3 BlockRegistry::GetFaceNormals(BlockFaceDirection face)
+{
+    //lookup table
+   static const std::array<glm::vec3, static_cast<std::size_t>(BlockFaceDirection::Count)> faceNormals =
+   {
+       glm::vec3{ 0.0f, 0.0f, 1.0f },   //Front
+       glm::vec3{ 0.0f, 0.0f, -1.0f },  //Back
+       glm::vec3{ -1.0f, 0.0f, 0.0f },  //Left
+       glm::vec3{ 1.0f, 0.0f, 0.0f },   //Right
+       glm::vec3{ 0.0f, 1.0f, 0.0f },   //Top
+       glm::vec3{ 0.0f, -1.0f, 0.0f }  //Bottom
+   };
+    
+    return faceNormals[static_cast<std::size_t>(face)];
+}

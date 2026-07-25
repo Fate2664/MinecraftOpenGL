@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <vector>
+#include <glm/vec3.hpp>
 
 #include "BlockDefinition.h"
 #include "BlockType.h"
@@ -11,6 +12,7 @@ public:
     static const BlockDefinition& Get(BlockType type);
     static bool IsAir(BlockType type);
     static bool ShouldRenderFace(BlockType current, BlockType neighbour);
+    static glm::vec3 GetFaceNormals(BlockFaceDirection face);
     
     //Helper method for blocks with the same texture all around:
     constexpr static std::array<AtlasTile, static_cast<std::size_t>(BlockFaceDirection::Count)> AllFaceTextures(AtlasTile tile)
@@ -121,7 +123,7 @@ public:
             AllFaceTextures(AtlasTile{1, 13})
         },
         
-        //Diamonds
+        //Diamond
         BlockDefinition{
             true,
             true,

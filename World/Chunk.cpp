@@ -97,7 +97,7 @@ void Chunk::GenerateOres(ChunkBlockData& blocks, BlockType ore, const float oreS
                 int totalGrowthAttempts = 0;
                 if (blocks[x][y][z] == BlockType::Stone)
                 {
-                    //Have a chance to replace stone block with coal
+                    //Have a chance to replace stone block with ore
                     if (distr(randomEngine) <= (oreSpawnPerc))
                     {
                         blocks[x][y][z] = ore;
@@ -133,7 +133,7 @@ void Chunk::GenerateOres(ChunkBlockData& blocks, BlockType ore, const float oreS
                             {
                                 blocks[targetPosition.x][targetPosition.y][targetPosition.z] = ore;
                                 
-                                //Continue growing from the newly placed coal
+                                //Continue growing from the newly placed ore
                                 currentPosition = targetPosition;
                                 veinBlockCount++;
                             }
@@ -233,12 +233,14 @@ void Chunk::AddFace(BlockFaceDirection face, const glm::vec3& blockPosition, Blo
 
     const auto& rawVertices = BlockRawGeometry::cubeFaces.at(static_cast<std::size_t>(face));
     const auto& uv = TextureData::GetFaceUVs(blockType, face);
-
+    const auto& normal = BlockRegistry::GetFaceNormals(face);
+    
     for (int i = 0; i < 4; i++)
     {
         chunkVertices.push_back(Vertex{
             rawVertices[i] + blockPosition,
-            uv[i]
+            uv[i],
+            normal
         });
     }
 
@@ -370,6 +372,7 @@ void Chunk::BuildChunk()
 
     chunkVAO.LinkAttrib(*chunkVBO, 0, 3, GL_FLOAT, sizeof(Vertex), (void*)0);
     chunkVAO.LinkAttrib(*chunkVBO, 1, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, texUV));
+    chunkVAO.LinkAttrib(*chunkVBO, 2, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
     chunkEBO = std::make_unique<ElementBufferObject>(chunkIndices);
 
