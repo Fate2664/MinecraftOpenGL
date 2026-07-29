@@ -10,29 +10,30 @@ in vec2 texCoord;
 //Imports:
 uniform sampler2D diffuse0;
 uniform vec3 lightColor;
+//Direction the sunlight travels
 uniform vec3 directionalLight;
 
-vec4 DirectionalLight();
+vec4 DirectionalLight(vec3 directionalLight, vec3 lightColor);
 
 void main()
 {
-    FragColor = DirectionalLight();
+    FragColor = DirectionalLight(directionalLight, lightColor);
 }
 
-vec4 DirectionalLight()
+vec4 DirectionalLight(vec3 directionalLight, vec3 lightColor)
 {
-    //ambient lighting
-    float ambient = 0.2f;
+    vec4 albedo = texture(diffuse0, texCoord);
     
-    //Diffuse lighting
-    vec3 normalizedNormal = normalize(normal);
-    vec3 lightDirection = normalize(vec3(1.0f, 1.0f, 0.0f));
-    float diffuse = max(dot(normalizedNormal, lightDirection), 0.0f);
-    
-    vec4 textureColor = (texture(diffuse0, texCoord) * (diffuse + ambient)) * lightColor;
-    
-    if (textureColor.a < 0.5)
+    if (albedo.a < 0.5)
             discard;
     
-    return textureColor;
+    vec3 normalizedNormal = normalize(normal);
+    vec3 lightDirection = normalize(-directionalLight);
+    
+    //Diffuse lighting
+    float ambientStrength = 0.35f;
+    float diffuseStrength = max(dot(normalizedNormal, lightDirection), 0.0f);
+    float brightness = ambientStrength + diffuseStrength * 0.9f;
+    
+    return vec4(albedo.rgb * lightColor * brightness, albedo.a);
 }

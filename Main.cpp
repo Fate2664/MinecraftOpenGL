@@ -59,7 +59,7 @@ int main()
         deltaTime = std::min(deltaTime, 0.1f);
         
         //Specify the color of the background
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.482f, 0.714f, 0.91f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         camera.Inputs(window, deltaTime);

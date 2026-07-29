@@ -8,7 +8,6 @@ layout (location = 1) in vec2 aTex;
 layout (location = 2) in vec3 aNormal;
 
 //Exports:
-out vec3 crrPos;
 out vec2 texCoord;
 out vec3 normal;
 
@@ -18,9 +17,10 @@ uniform mat4 chunk;
 
 void main()
 {
-    crrPos = vec3(chunk * vec4(aPos, 1.0f));
+    vec3 worldPosition = vec3(chunk * vec4(aPos, 1.0f));
+    
     texCoord = aTex;
-    normal = aNormal;
+    normal = normalize(mat3(transpose(inverse(chunk))) * aNormal);
   
-    gl_Position = camMatrix * vec4(crrPos, 1.0);
+    gl_Position = camMatrix * vec4(worldPosition, 1.0);
 }

@@ -11,6 +11,7 @@ Chunk::Chunk(glm::vec3 position, GeneratedChunkData&& data)
     GenerateTrees();
 }
 
+#pragma region Generate Data
 GeneratedChunkData Chunk::GenerateData(glm::vec3 position)
 {
     GeneratedChunkData data;
@@ -146,17 +147,6 @@ void Chunk::GenerateOres(ChunkBlockData& blocks, BlockType ore, const float oreS
     }
 }
 
-void Chunk::RebuildMesh(const ChunkNeigbors& neigbors)
-{
-    chunkVertices.clear();
-    chunkIndices.clear();
-
-    GenerateFaces(neigbors);
-    BuildChunk();
-
-    hasMesh = true;
-}
-
 void Chunk::GenerateFaces(const ChunkNeigbors& neigbors)
 {
     for (int x = 0; x < Constants::chunkSize; x++)
@@ -224,33 +214,6 @@ void Chunk::GenerateFaces(const ChunkNeigbors& neigbors)
             }
         }
     }
-}
-
-void Chunk::AddFace(BlockFaceDirection face, const glm::vec3& blockPosition, BlockType blockType)
-{
-    //static_cast converts chunkVertices.size() into a GLuint
-    GLuint startIndex = static_cast<GLuint>(chunkVertices.size());
-
-    const auto& rawVertices = BlockRawGeometry::cubeFaces.at(static_cast<std::size_t>(face));
-    const auto& uv = TextureData::GetFaceUVs(blockType, face);
-    const auto& normal = BlockRegistry::GetFaceNormals(face);
-    
-    for (int i = 0; i < 4; i++)
-    {
-        chunkVertices.push_back(Vertex{
-            rawVertices[i] + blockPosition,
-            uv[i],
-            normal
-        });
-    }
-
-    chunkIndices.push_back(startIndex);
-    chunkIndices.push_back(startIndex + 1);
-    chunkIndices.push_back(startIndex + 2);
-
-    chunkIndices.push_back(startIndex + 2);
-    chunkIndices.push_back(startIndex + 3);
-    chunkIndices.push_back(startIndex);
 }
 
 void Chunk::GenerateTrees()
@@ -348,6 +311,50 @@ void Chunk::GenerateTreeModel(int treeSpawnX, int treeSpawnY, int treeSpawnZ)
         }
     }
 }
+
+#pragma endregion
+
+#pragma region Building Mesh
+
+void Chunk::AddFace(BlockFaceDirection face, const glm::vec3& blockPosition, BlockType blockType)
+{
+    //static_cast converts chunkVertices.size() into a GLuint
+    GLuint startIndex = static_cast<GLuint>(chunkVertices.size());
+
+    const auto& rawVertices = BlockRawGeometry::cubeFaces.at(static_cast<std::size_t>(face));
+    const auto& uv = TextureData::GetFaceUVs(blockType, face);
+    const auto& normal = BlockRegistry::GetFaceNormals(face);
+    
+    for (int i = 0; i < 4; i++)
+    {
+        chunkVertices.push_back(Vertex{
+            rawVertices[i] + blockPosition,
+            uv[i],
+            normal
+        });
+    }
+
+    chunkIndices.push_back(startIndex);
+    chunkIndices.push_back(startIndex + 1);
+    chunkIndices.push_back(startIndex + 2);
+
+    chunkIndices.push_back(startIndex + 2);
+    chunkIndices.push_back(startIndex + 3);
+    chunkIndices.push_back(startIndex);
+}
+
+void Chunk::RebuildMesh(const ChunkNeigbors& neigbors)
+{
+    chunkVertices.clear();
+    chunkIndices.clear();
+
+    GenerateFaces(neigbors);
+    BuildChunk();
+
+    hasMesh = true;
+}
+
+#pragma endregion
 
 #pragma region Rendering
 
