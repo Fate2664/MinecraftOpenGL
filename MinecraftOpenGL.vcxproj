@@ -460,6 +460,7 @@
       <SDLCheck>true</SDLCheck>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
+    <ClCompile Include="OpenGL_Objects\FrameBufferObject.cpp" />
     <ClCompile Include="OpenGL_Objects\VertexArrayObject.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -1002,6 +1003,7 @@
     <ClInclude Include="Blocks\Texture.h" />
     <ClInclude Include="Blocks\TextureData.h" />
     <ClInclude Include="Constants.h" />
+    <ClInclude Include="OpenGL_Objects\FrameBufferObject.h" />
     <ClInclude Include="Player\Camera.h" />
     <ClInclude Include="Shaders\shaderClass.h" />
     <ClInclude Include="World\Chunk.h" />
