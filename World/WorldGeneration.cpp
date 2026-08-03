@@ -24,7 +24,7 @@ void WorldGeneration::Render(Shader& shaderProgram, Camera& camera)
 {
     shaderProgram.Activate();
     shaderProgram.SetVec3("lightColor", glm::vec3(1.0f, 0.95f, 0.85f));
-    shaderProgram.SetVec3("directionalLight", glm::normalize(glm::vec3(-1.0f, -1.5f, -0.5f)));
+    shaderProgram.SetVec3("directionalLight", (glm::vec3(-1.0f, -2.0f, -1.0f)));
     
     blockTexture->texUnit(shaderProgram, "diffuse0", 0);
     blockTexture->Bind();

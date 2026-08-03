@@ -218,13 +218,15 @@ void Chunk::GenerateFaces(const ChunkNeigbors& neigbors)
 
 void Chunk::GenerateTrees()
 {
-    //One roll for the entire chunk
-    //Generate a random number from 1 - 100
-    if ((std::rand() % 100) >= 50)
+    std::random_device rd;
+    std::mt19937 randomEngine(rd());
+    std::uniform_int_distribution<int> distribution(0, Constants::chunkSize-1);
+    std::uniform_int_distribution<int> treeDistr(0, 100);
+    if (treeDistr(randomEngine) >= 50)
         return;
 
-    const int x = std::rand() % Constants::chunkSize;
-    const int z = std::rand() % Constants::chunkSize;
+    const int x = distribution(randomEngine);
+    const int z = distribution(randomEngine);
 
     const int grassY = static_cast<int>(heightMap[x][z]);
     const int treeY = grassY + 1;
@@ -273,7 +275,7 @@ void Chunk::GenerateTreeModel(int treeSpawnX, int treeSpawnY, int treeSpawnZ)
                     || leafZ < 0 || leafZ >= Constants::chunkSize
                     || leafY < 0 || leafY >= Constants::chunkheight)
                 {
-                    continue;
+                    continue;   //TODO add to vector list faces that can't be placed
                 }
 
                 //Avoid replacing trunk

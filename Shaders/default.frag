@@ -31,9 +31,9 @@ vec4 DirectionalLight(vec3 directionalLight, vec3 lightColor)
     vec3 lightDirection = normalize(-directionalLight);
     
     //Diffuse lighting
-    float ambientStrength = 0.35f;
+    float ambientStrength = 0.6f;
     float diffuseStrength = max(dot(normalizedNormal, lightDirection), 0.0f);
-    float brightness = ambientStrength + diffuseStrength * 0.9f;
+    float brightness = ambientStrength + diffuseStrength * 0.6f;
     
     return vec4(albedo.rgb * lightColor * brightness, albedo.a);
 }
