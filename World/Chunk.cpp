@@ -71,16 +71,16 @@ GeneratedChunkData Chunk::GenerateData(glm::vec3 position)
             }
         }
     }
-    
+
     //Generate Ores:
     GenerateOres(data.blocks, BlockType::Coal, 0.0013f, 6);
     GenerateOres(data.blocks, BlockType::Iron, 0.0009f, 6);
     GenerateOres(data.blocks, BlockType::Diamond, 0.0005f, 3);
-    
+
     return data;
 }
 
-void Chunk::GenerateOres(ChunkBlockData& blocks, BlockType ore, const float oreSpawnPerc,const int maxBlocksPerVein)
+void Chunk::GenerateOres(ChunkBlockData& blocks, BlockType ore, const float oreSpawnPerc, const int maxBlocksPerVein)
 {
     //Ore spawning
     std::random_device rd;
@@ -130,10 +130,11 @@ void Chunk::GenerateOres(ChunkBlockData& blocks, BlockType ore, const float oreS
                                 targetPosition.z >= 0 &&
                                 targetPosition.z < Constants::chunkSize;
 
-                            if (insideChunk && blocks[targetPosition.x][targetPosition.y][targetPosition.z] == BlockType::Stone)
+                            if (insideChunk && blocks[targetPosition.x][targetPosition.y][targetPosition.z] ==
+                                BlockType::Stone)
                             {
                                 blocks[targetPosition.x][targetPosition.y][targetPosition.z] = ore;
-                                
+
                                 //Continue growing from the newly placed ore
                                 currentPosition = targetPosition;
                                 veinBlockCount++;
@@ -220,7 +221,7 @@ void Chunk::GenerateTrees()
 {
     std::random_device rd;
     std::mt19937 randomEngine(rd());
-    std::uniform_int_distribution<int> distribution(0, Constants::chunkSize-1);
+    std::uniform_int_distribution<int> distribution(0, Constants::chunkSize - 1);
     std::uniform_int_distribution<int> treeDistr(0, 100);
     if (treeDistr(randomEngine) >= 50)
         return;
@@ -240,8 +241,8 @@ void Chunk::GenerateTreeModel(int treeSpawnX, int treeSpawnY, int treeSpawnZ)
     constexpr int maxTreeHeight = 8;
 
     const int availableHeight = Constants::chunkheight - treeSpawnY;
-    const int largestAllowedTree = std::min(maxTreeHeight, availableHeight);
     //trees cannot be heigher than max chunk height 
+    const int largestAllowedTree = std::min(maxTreeHeight, availableHeight);
 
     //Randomly choose height between min and max while still being inside max chunk height
     std::random_device rd;
@@ -271,11 +272,22 @@ void Chunk::GenerateTreeModel(int treeSpawnX, int treeSpawnY, int treeSpawnZ)
                 int leafY = baseLeafY + yOffset;
 
                 //Check if x and z offsets are outside of bounds of chunk
-                if (leafX < 0 || leafX >= Constants::chunkSize
-                    || leafZ < 0 || leafZ >= Constants::chunkSize
-                    || leafY < 0 || leafY >= Constants::chunkheight)
+                const bool outsideHorizontalBounds =
+                    leafX < 0 || leafX >= Constants::chunkSize
+                    || leafZ < 0 || leafZ >= Constants::chunkSize;
+
+                const bool outsideVerticalBounds = leafY < 0 || leafY >= Constants::chunkheight;
+
+                if (outsideVerticalBounds)
+                    continue;
+
+                if (outsideHorizontalBounds)
                 {
-                    continue;   //TODO add to vector list faces that can't be placed
+                    unplacedBlocks.push_back({
+                        BlockType::Leaf,
+                        {static_cast<int>(position.x) + leafX, leafY, static_cast<int>(position.z) + leafZ}
+                    });
+                    continue;
                 }
 
                 //Avoid replacing trunk
@@ -289,7 +301,6 @@ void Chunk::GenerateTreeModel(int treeSpawnX, int treeSpawnY, int treeSpawnZ)
     //Upper layer
     constexpr int upperLeafRadius = 1;
     const int upperLeafY = treeSpawnY + trunkHeight - 2;
-    //Base layer
     for (int xOffset = -upperLeafRadius; xOffset <= upperLeafRadius; xOffset++)
     {
         for (int zOffset = -upperLeafRadius; zOffset <= upperLeafRadius; zOffset++)
@@ -297,11 +308,22 @@ void Chunk::GenerateTreeModel(int treeSpawnX, int treeSpawnY, int treeSpawnZ)
             int leafX = treeSpawnX + xOffset;
             int leafZ = treeSpawnZ + zOffset;
 
+            const bool outsideHorizontalBounds =
+                leafX < 0 || leafX >= Constants::chunkSize
+                || leafZ < 0 || leafZ >= Constants::chunkSize;
+
+            const bool outsideVerticalBounds = upperLeafY < 0 || upperLeafY >= Constants::chunkheight;
+
             //Check if x and z offsets are outside of bounds of chunk
-            if (leafX < 0 || leafX >= Constants::chunkSize
-                || leafZ < 0 || leafZ >= Constants::chunkSize
-                || upperLeafY < 0 || upperLeafY >= Constants::chunkheight)
+            if (outsideVerticalBounds)
+                continue;
+
+            if (outsideHorizontalBounds)
             {
+                unplacedBlocks.push_back({
+                    BlockType::Leaf,
+                    {static_cast<int>(position.x) + leafX, upperLeafY, static_cast<int>(position.z) + leafZ}
+                });
                 continue;
             }
 
@@ -326,7 +348,7 @@ void Chunk::AddFace(BlockFaceDirection face, const glm::vec3& blockPosition, Blo
     const auto& rawVertices = BlockRawGeometry::cubeFaces.at(static_cast<std::size_t>(face));
     const auto& uv = TextureData::GetFaceUVs(blockType, face);
     const auto& normal = BlockRegistry::GetFaceNormals(face);
-    
+
     for (int i = 0; i < 4; i++)
     {
         chunkVertices.push_back(Vertex{
@@ -469,5 +491,21 @@ BlockType Chunk::GetBlockType(int x, int y, int z, const ChunkNeigbors& neigbors
     }
 
     return chunkBlocks[x][y][z];
+}
+
+bool Chunk::TryPlaceBlock(const glm::ivec3& localPos, BlockType type)
+{
+    //First check bounds
+    if (localPos.x < 0 || localPos.x >= Constants::chunkSize ||
+        localPos.y < 0 || localPos.y >= Constants::chunkheight ||
+        localPos.z < 0 || localPos.z >= Constants::chunkSize) return false;
+    
+    BlockType& destination = chunkBlocks[localPos.x][localPos.y][localPos.z];
+    
+    if (destination != BlockType::Empty)
+        return false;
+    
+    destination = type;
+    return true;
 }
 #pragma endregion

@@ -39,6 +39,7 @@ private:
     std::vector<ChunkGenerationJob> generationJobs;
     std::deque<ChunkCoord> meshQueue;
     std::unordered_set<ChunkCoord, ChunkCoordHash> meshScheduled;
+    std::unordered_map<ChunkCoord, std::vector<UnplacedBlock>, ChunkCoordHash> pendingBlocks;
     
     //Job budgets
     std::size_t maxConcurrentGenerationJobs = 2;
@@ -47,6 +48,8 @@ private:
     
     const Chunk* FindChunk(const ChunkCoord& chunkCoord) const;
     ChunkNeigbors GetNeigbors(const ChunkCoord& chunkCoord) const;
+    void PlaceOrQueueBlock(const UnplacedBlock& block);
+    void ApplyPendingBlocks(const ChunkCoord& coord, Chunk& chunk);
     
     void QueueMissingChunks(int cameraChunkX, int cameraChunkZ);
     void StartGenerationJobs();

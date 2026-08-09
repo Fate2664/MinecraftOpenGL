@@ -46,6 +46,12 @@ struct ChunkCoordHash
     }
 };
 
+struct UnplacedBlock
+{
+    BlockType type;
+    glm::ivec3 worldPosition;
+};
+
 using ChunkBlockData = std::array<std::array<std::array<BlockType, Constants::chunkSize>, Constants::chunkheight>, Constants::chunkSize>;
 using ChunkHeightMap = std::array<std::array<float, Constants::chunkSize>, Constants::chunkSize>;
 
@@ -65,27 +71,27 @@ public:
     Chunk(glm::vec3 position, GeneratedChunkData&& data);
     
     static GeneratedChunkData GenerateData(glm::vec3 position);
+    std::vector<UnplacedBlock> GetUnplacedBlocks() { return std::exchange(unplacedBlocks, std::vector<UnplacedBlock>{}); };
     
     void RebuildMesh(const ChunkNeigbors& neigbors);    //Used to rebuild faces when new chunk is loaded
     void Render(Shader& shaderProgram, Camera& camera);     //draw the chunk
     void Delete();
 
-    bool HasMesh() const
-    {
-        return hasMesh;
-    }
+    bool HasMesh() const {return hasMesh;}
+    bool TryPlaceBlock(const glm::ivec3& localPos, BlockType type);
 private:
     std::vector<Vertex> chunkVertices;
     std::vector<GLuint> chunkIndices;
+    std::vector<UnplacedBlock> unplacedBlocks;
     
     VertexArrayObject chunkVAO;
-    
     std::unique_ptr<VertexBufferObject> chunkVBO;    
     std::unique_ptr<ElementBufferObject> chunkEBO;
     
     void GenerateFaces(const ChunkNeigbors& neigbors);
     void AddFace(BlockFaceDirection face, const glm::vec3& blockPosition, BlockType blockType);    //we use a const reference to give the function access to an 
     //existing BlockFaceData but it does not copy it and it cannot modify it. This is helpful since BlockFaceData uses arrays
+    
     void BuildChunk();  //take data and process it for rendering
     void GenerateTrees();
     void GenerateTreeModel(int treeSpawnX, int treeSpawnY, int treeSpawnZ);
