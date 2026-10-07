@@ -16,9 +16,7 @@ GeneratedChunkData Chunk::GenerateData(glm::vec3 position)
 {
     GeneratedChunkData data;
 
-    const int minTerrainHeight = 35;
-    const int maxTerrainHeight = Constants::chunkheight - 12;
-    const int maxStoneHeight = 3; //3 below terrain height
+    const int maxStoneHeight = 2; //3 below terrain height
 
     for (int x = 0; x < Constants::chunkSize; x++)
     {
@@ -27,26 +25,12 @@ GeneratedChunkData Chunk::GenerateData(glm::vec3 position)
             float worldX = position.x + x;
             float worldZ = position.z + z;
 
-            float noiseValue = 0.0f;
-            float frequency = 0.02f;
-            float amplitude = 1.0f;
-            float maxValue = 0.0f;
+            //Noise
+            const float continentalness = SampleNoise(worldX, worldZ, Constants::ContinentalnessNoise);
+            const float erosion = SampleNoise(worldX, worldZ, Constants::ErosionNoise);
+            const float peaks = SampleNoise(worldX, worldZ, Constants::PeaksNoise);
 
-            for (int octave = 0; octave < 4; octave++)
-            {
-                float n = glm::perlin(glm::vec2(worldX * frequency, worldZ * frequency));
-                n = (n + 1.0f) * 0.5f;
-
-                noiseValue += n * amplitude;
-                maxValue += amplitude;
-
-                amplitude *= 0.5f;
-                frequency *= 2.0f;
-            }
-
-            noiseValue /= maxValue;
-
-            int terrainHeight = minTerrainHeight + static_cast<int>(noiseValue * (maxTerrainHeight - minTerrainHeight));
+            int terrainHeight = CalculateTerrainHeight(continentalness, erosion, peaks);
 
             data.heightMap[x][z] = static_cast<float>(terrainHeight);
 
@@ -158,7 +142,8 @@ void Chunk::GenerateFaces(const ChunkNeigbors& neigbors)
             {
                 if (!IsBlockEmpty(x, y, z))
                 {
-                    const glm::vec3 blockPosition(x, static_cast<float>(y) - Constants::chunkheight + 0.5f, z);
+                    const float worldY = static_cast<float>(Constants::worldMinY + y) + 0.5f;
+                    const glm::vec3 blockPosition(x, worldY, z);
                     const BlockType blockType = chunkBlocks[x][y][z];
                     BlockType neighbourType = BlockType::Empty;
 
@@ -508,4 +493,74 @@ bool Chunk::TryPlaceBlock(const glm::ivec3& localPos, BlockType type)
     destination = type;
     return true;
 }
+
+float Chunk::SampleNoise(float worldX, float worldZ, const NoiseData& noiseData)
+{
+    float noiseValue = 0.0f;
+    float amplitude = 1.0f;
+    float frequency = noiseData.frequency;
+    float totalAmplitude = 0.0f;
+    
+    const glm::vec2 seedOffset(noiseData.seed * 0.12345f, noiseData.seed * 0.67891f);
+    
+    for (int octave = 0; octave < noiseData.octaves; octave++)
+    {
+        const glm::vec2 samplePosition = glm::vec2(worldX,  worldZ) * frequency + seedOffset;
+        const float sample = glm::perlin(samplePosition);
+        
+        noiseValue += sample * amplitude;
+        totalAmplitude += amplitude;
+        
+        amplitude *= noiseData.persistence;
+        frequency *= noiseData.lacunarity;
+    }
+    
+    if (totalAmplitude == 0.0f)
+        return 0.0f;
+    
+    //Normalize the result to the total amplitude
+    return noiseValue / totalAmplitude;
+}
+
+int Chunk::CalculateTerrainHeight(float continentalness, float erosion, float peaks)
+{
+    constexpr float minHeight = 12.0f;
+    constexpr float treeHeadroom = 10.0f;
+    constexpr float maxHeight = static_cast<float>(Constants::chunkheight) - treeHeadroom;
+    
+    //Continentalness establishes the broad base elevation
+    //*Smooth step converts a noise value into a gradual transition between 0 and 1.
+    //It uses an S shaped curve instead of linear slope.
+    //Continentalness <= -0.7 -> Continental Factor = 0
+    //Continentalness >= 0.6 -> Continental Factor = 1
+    //Continentalness between -0.7 and 0.6 = Continental Factor = gradual transition
+    const float continentalFactor = glm::smoothstep(-0.7f, 0.6f, continentalness);
+    const float baseHeight = 24.0f + continentalFactor * 38.0f;
+    
+    //erosion = -1 means rugged
+    //erosion = +1 means heavily eroded and smooth
+    const float normalizedErosion = erosion * 0.5f + 0.5f;
+    const float ruggedness = 1.0f - normalizedErosion;
+    
+    //Give ordinary land some rolling elevation
+    const float landMask = glm::smoothstep(-0.3f, 0.1f, continentalness);
+    const float hillStrength = 1.0f + ruggedness * 4.0f;
+    const float hills = peaks * hillStrength * landMask;
+    
+    //Convert ordinary noise into narrow ridges
+    float ridge = 1.0f - std::abs(peaks);
+    ridge = ridge * ridge;
+    
+    //Mountains should occur inland and in rugged regions
+    const float inlandMask = glm::smoothstep(-0.1f, 0.45f, continentalness);
+    const float ruggedRegionMask = glm::smoothstep(0.3f, 0.8f, ruggedness);
+    const float mountainMask = inlandMask * ruggedRegionMask;
+    const float mountains = ridge * mountainMask * 50.0f;
+    
+    float height = baseHeight + hills + mountains;
+    
+    return static_cast<int>(std::round(height));
+}
+
+
 #pragma endregion

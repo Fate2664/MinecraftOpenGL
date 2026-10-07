@@ -17,6 +17,8 @@
 #include "../Blocks/BlockType.h"
 #include <glm/gtc/noise.hpp>
 
+#include "NoiseData.h"
+
 class Camera;
 class Chunk;
 
@@ -71,7 +73,7 @@ public:
     Chunk(glm::vec3 position, GeneratedChunkData&& data);
     
     static GeneratedChunkData GenerateData(glm::vec3 position);
-    std::vector<UnplacedBlock> GetUnplacedBlocks() { return std::exchange(unplacedBlocks, std::vector<UnplacedBlock>{}); };
+    std::vector<UnplacedBlock> GetUnplacedBlocks() { return std::exchange(unplacedBlocks, std::vector<UnplacedBlock>{}); }
     
     void RebuildMesh(const ChunkNeigbors& neigbors);    //Used to rebuild faces when new chunk is loaded
     void Render(Shader& shaderProgram, Camera& camera);     //draw the chunk
@@ -79,6 +81,8 @@ public:
 
     bool HasMesh() const {return hasMesh;}
     bool TryPlaceBlock(const glm::ivec3& localPos, BlockType type);
+    static float SampleNoise(float worldX, float worldZ, const NoiseData& noiseData);
+    static int CalculateTerrainHeight(float continentalness, float erosion, float peaks);
 private:
     std::vector<Vertex> chunkVertices;
     std::vector<GLuint> chunkIndices;

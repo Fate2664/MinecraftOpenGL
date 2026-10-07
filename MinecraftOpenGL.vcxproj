@@ -917,6 +917,7 @@
       <SDLCheck>true</SDLCheck>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
+    <ClCompile Include="World\NoiseData.cpp" />
     <ClCompile Include="World\WorldGeneration.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -1007,6 +1008,7 @@
     <ClInclude Include="Player\Camera.h" />
     <ClInclude Include="Shaders\shaderClass.h" />
     <ClInclude Include="World\Chunk.h" />
+    <ClInclude Include="World\NoiseData.h" />
     <ClInclude Include="World\WorldGeneration.h" />
   </ItemGroup>
   <ItemGroup>

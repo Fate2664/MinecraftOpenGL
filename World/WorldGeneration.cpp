@@ -29,7 +29,6 @@ void WorldGeneration::Render(Shader& shaderProgram, Camera& camera)
     blockTexture->texUnit(shaderProgram, "diffuse0", 0);
     blockTexture->Bind();
 
-
     //Get the chunk object and render it
     for (auto& chunk : chunks)
         chunk.second->Render(shaderProgram, camera);
