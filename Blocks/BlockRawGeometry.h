@@ -58,4 +58,22 @@ struct BlockRawGeometry
             glm::vec3(-0.5f, -0.5f, -0.5f),
         }
     };
+    
+    inline static const std::array<std::array<glm::vec3, 4>, 2> crossedBillboardFaces = {
+        //Plane going from -X/-Z to +X/+Z
+        std::array<glm::vec3, 4>{
+            glm::vec3(-0.5f, 0.5f, -0.5f),
+            glm::vec3(0.5f, 0.5f, 0.5f),
+            glm::vec3(0.5f, -0.5f, 0.5f),
+            glm::vec3(-0.5f, -0.5f, -0.5f)
+        },
+        
+        //Plane going from +X/-Z to -X/+Z
+        std::array<glm::vec3, 4>{
+            glm::vec3(0.5f, 0.5f, -0.5f),
+            glm::vec3(-0.5f, 0.5f, 0.5f),
+            glm::vec3(-0.5f, -0.5f, 0.5f),
+            glm::vec3(0.5f, -0.5f, -0.5f)
+        }
+    };
 };

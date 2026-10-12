@@ -12,6 +12,8 @@ enum class BlockType : std::uint8_t //using std::uint8_t reduces each block type
     Coal,
     Iron,
     Diamond,
+    GrassBillboard,
     
     Count
 };
+

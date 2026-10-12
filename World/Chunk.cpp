@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <random>
 #include <glm/gtx/transform.hpp>
+#include <glm/geometric.hpp>
 
 Chunk::Chunk(glm::vec3 position, GeneratedChunkData&& data)
     : position(position),
@@ -9,6 +10,7 @@ Chunk::Chunk(glm::vec3 position, GeneratedChunkData&& data)
       heightMap(std::move(data.heightMap))
 {
     GenerateTrees();
+    GenerateDecorations();
 }
 
 #pragma region Generate Data
@@ -145,6 +147,14 @@ void Chunk::GenerateFaces(const ChunkNeigbors& neigbors)
                     const float worldY = static_cast<float>(Constants::worldMinY + y) + 0.5f;
                     const glm::vec3 blockPosition(x, worldY, z);
                     const BlockType blockType = chunkBlocks[x][y][z];
+                    const BlockDefinition& definition = BlockRegistry::Get(blockType);
+
+                    if (definition.modelType == BlockModelType::CrossedBillboard)
+                    {
+                        AddCrossedBillboard(blockPosition, blockType);
+                        continue;
+                    }
+
                     BlockType neighbourType = BlockType::Empty;
 
                     //Leaves render all faces
@@ -218,6 +228,42 @@ void Chunk::GenerateTrees()
     const int treeY = grassY + 1;
 
     GenerateTreeModel(x, treeY, z);
+}
+
+void Chunk::GenerateDecorations()
+{
+    //Stable seed so this chunk gets the same decorations each time.
+    std::seed_seq seed{
+        static_cast<int>(position.x),
+        static_cast<int>(position.z),
+        0x47524153
+    };
+    
+    std::mt19937 randomEngine(seed);
+    std::bernoulli_distribution spawnGrass(0.2); //20% spawn rate
+    
+    for (int x = 0; x < Constants::chunkSize; x++)
+    {
+        for (int z = 0; z < Constants::chunkSize; z++)
+        {
+            const int surfaceY = static_cast<int>(heightMap[x][z]);
+            const int decorationY = surfaceY + 1;
+            
+            if (decorationY < 0 || decorationY >= Constants::chunkheight)
+                continue;
+            
+            if (chunkBlocks[x][surfaceY][z] != BlockType::Grass)
+                continue;
+            
+            if (chunkBlocks[x][decorationY][z] != BlockType::Empty)
+                continue;
+            
+            if (spawnGrass(randomEngine))
+            {
+                chunkBlocks[x][decorationY][z] = BlockType::GrassBillboard;
+            }
+        }
+    }
 }
 
 void Chunk::GenerateTreeModel(int treeSpawnX, int treeSpawnY, int treeSpawnZ)
@@ -333,13 +379,15 @@ void Chunk::AddFace(BlockFaceDirection face, const glm::vec3& blockPosition, Blo
     const auto& rawVertices = BlockRawGeometry::cubeFaces.at(static_cast<std::size_t>(face));
     const auto& uv = TextureData::GetFaceUVs(blockType, face);
     const auto& normal = BlockRegistry::GetFaceNormals(face);
+    const glm::vec3 tint = BlockRegistry::GetTint(blockType, face);
 
     for (int i = 0; i < 4; i++)
     {
         chunkVertices.push_back(Vertex{
             rawVertices[i] + blockPosition,
             uv[i],
-            normal
+            normal,
+            tint
         });
     }
 
@@ -350,6 +398,47 @@ void Chunk::AddFace(BlockFaceDirection face, const glm::vec3& blockPosition, Blo
     chunkIndices.push_back(startIndex + 2);
     chunkIndices.push_back(startIndex + 3);
     chunkIndices.push_back(startIndex);
+}
+
+void Chunk::AddCrossedBillboard(const glm::vec3& blockPosition, BlockType blockType)
+{
+    const auto uv = TextureData::GetFaceUVs(blockType, BlockFaceDirection::Front);
+
+    for (const auto& rawVertices : BlockRawGeometry::crossedBillboardFaces)
+    {
+        //Minus sign because of clockwise front faces
+        const glm::vec3 frontNormal = -glm::normalize(glm::cross(
+            rawVertices[1] - rawVertices[0],
+            rawVertices[2] - rawVertices[0]
+        ));
+
+        //Duplicate each plane with reversed winding because of back face culling
+        for (int side = 0; side < 2; side++)
+        {
+            const bool reverse = side == 1;
+            const GLuint startIndex = static_cast<GLuint>(chunkVertices.size());
+            const glm::vec3 tint = BlockRegistry::GetTint(blockType, BlockFaceDirection::Front);
+
+            for (int vertex = 0; vertex < 4; vertex++)
+            {
+                const int sourceIndex = reverse ? 3 - vertex : vertex;
+                chunkVertices.push_back(Vertex{
+                    rawVertices[sourceIndex] + blockPosition,
+                    uv[sourceIndex],
+                    reverse ? -frontNormal : frontNormal,
+                    tint
+                });
+            }
+
+            chunkIndices.push_back(startIndex);
+            chunkIndices.push_back(startIndex + 1);
+            chunkIndices.push_back(startIndex + 2);
+
+            chunkIndices.push_back(startIndex + 2);
+            chunkIndices.push_back(startIndex + 3);
+            chunkIndices.push_back(startIndex);
+        }
+    }
 }
 
 void Chunk::RebuildMesh(const ChunkNeigbors& neigbors)
@@ -389,6 +478,7 @@ void Chunk::BuildChunk()
     chunkVAO.LinkAttrib(*chunkVBO, 0, 3, GL_FLOAT, sizeof(Vertex), (void*)0);
     chunkVAO.LinkAttrib(*chunkVBO, 1, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, texUV));
     chunkVAO.LinkAttrib(*chunkVBO, 2, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+    chunkVAO.LinkAttrib(*chunkVBO, 3, 3, GL_FLOAT, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, tint)));
 
     chunkEBO = std::make_unique<ElementBufferObject>(chunkIndices);
 
@@ -483,13 +573,14 @@ bool Chunk::TryPlaceBlock(const glm::ivec3& localPos, BlockType type)
     //First check bounds
     if (localPos.x < 0 || localPos.x >= Constants::chunkSize ||
         localPos.y < 0 || localPos.y >= Constants::chunkheight ||
-        localPos.z < 0 || localPos.z >= Constants::chunkSize) return false;
-    
-    BlockType& destination = chunkBlocks[localPos.x][localPos.y][localPos.z];
-    
-    if (destination != BlockType::Empty)
+        localPos.z < 0 || localPos.z >= Constants::chunkSize)
         return false;
-    
+
+    BlockType& destination = chunkBlocks[localPos.x][localPos.y][localPos.z];
+
+    if (!BlockRegistry::Get(destination).replaceable)
+        return false;
+
     destination = type;
     return true;
 }
@@ -500,24 +591,24 @@ float Chunk::SampleNoise(float worldX, float worldZ, const NoiseData& noiseData)
     float amplitude = 1.0f;
     float frequency = noiseData.frequency;
     float totalAmplitude = 0.0f;
-    
+
     const glm::vec2 seedOffset(noiseData.seed * 0.12345f, noiseData.seed * 0.67891f);
-    
+
     for (int octave = 0; octave < noiseData.octaves; octave++)
     {
-        const glm::vec2 samplePosition = glm::vec2(worldX,  worldZ) * frequency + seedOffset;
+        const glm::vec2 samplePosition = glm::vec2(worldX, worldZ) * frequency + seedOffset;
         const float sample = glm::perlin(samplePosition);
-        
+
         noiseValue += sample * amplitude;
         totalAmplitude += amplitude;
-        
+
         amplitude *= noiseData.persistence;
         frequency *= noiseData.lacunarity;
     }
-    
+
     if (totalAmplitude == 0.0f)
         return 0.0f;
-    
+
     //Normalize the result to the total amplitude
     return noiseValue / totalAmplitude;
 }
@@ -527,7 +618,7 @@ int Chunk::CalculateTerrainHeight(float continentalness, float erosion, float pe
     constexpr float minHeight = 12.0f;
     constexpr float treeHeadroom = 10.0f;
     constexpr float maxHeight = static_cast<float>(Constants::chunkheight) - treeHeadroom;
-    
+
     //Continentalness establishes the broad base elevation
     //*Smooth step converts a noise value into a gradual transition between 0 and 1.
     //It uses an S shaped curve instead of linear slope.
@@ -536,29 +627,29 @@ int Chunk::CalculateTerrainHeight(float continentalness, float erosion, float pe
     //Continentalness between -0.7 and 0.6 = Continental Factor = gradual transition
     const float continentalFactor = glm::smoothstep(-0.7f, 0.6f, continentalness);
     const float baseHeight = 24.0f + continentalFactor * 38.0f;
-    
+
     //erosion = -1 means rugged
     //erosion = +1 means heavily eroded and smooth
     const float normalizedErosion = erosion * 0.5f + 0.5f;
     const float ruggedness = 1.0f - normalizedErosion;
-    
+
     //Give ordinary land some rolling elevation
     const float landMask = glm::smoothstep(-0.3f, 0.1f, continentalness);
     const float hillStrength = 1.0f + ruggedness * 4.0f;
     const float hills = peaks * hillStrength * landMask;
-    
+
     //Convert ordinary noise into narrow ridges
     float ridge = 1.0f - std::abs(peaks);
     ridge = ridge * ridge;
-    
+
     //Mountains should occur inland and in rugged regions
     const float inlandMask = glm::smoothstep(-0.1f, 0.45f, continentalness);
     const float ruggedRegionMask = glm::smoothstep(0.3f, 0.8f, ruggedness);
     const float mountainMask = inlandMask * ruggedRegionMask;
     const float mountains = ridge * mountainMask * 50.0f;
-    
+
     float height = baseHeight + hills + mountains;
-    
+
     return static_cast<int>(std::round(height));
 }
 

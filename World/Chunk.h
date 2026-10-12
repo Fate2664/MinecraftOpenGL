@@ -95,11 +95,13 @@ private:
     void GenerateFaces(const ChunkNeigbors& neigbors);
     void AddFace(BlockFaceDirection face, const glm::vec3& blockPosition, BlockType blockType);    //we use a const reference to give the function access to an 
     //existing BlockFaceData but it does not copy it and it cannot modify it. This is helpful since BlockFaceData uses arrays
+    void AddCrossedBillboard(const glm::vec3& blockPosition, BlockType blockType);
     
     void BuildChunk();  //take data and process it for rendering
     void GenerateTrees();
     void GenerateTreeModel(int treeSpawnX, int treeSpawnY, int treeSpawnZ);
     static void GenerateOres(ChunkBlockData& blocks, BlockType ore, float oreSpawnPerc, int maxBlocksPerVein);
+    void GenerateDecorations();
 
     bool hasMesh = false;
     bool IsBlockEmpty(int x, int y, int z) const;

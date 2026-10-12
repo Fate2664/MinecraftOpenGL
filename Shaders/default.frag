@@ -6,6 +6,7 @@ out vec4 FragColor;
 in vec3 crrPos;
 in vec3 normal;
 in vec2 texCoord;
+in vec3 vertexTint;
 
 //Imports:
 uniform sampler2D diffuse0;
@@ -35,5 +36,5 @@ vec4 DirectionalLight(vec3 directionalLight, vec3 lightColor)
     float diffuseStrength = max(dot(normalizedNormal, lightDirection), 0.0f);
     float brightness = ambientStrength + diffuseStrength * 0.6f;
     
-    return vec4(albedo.rgb * lightColor * brightness, albedo.a);
+    return vec4(albedo.rgb * vertexTint * lightColor * brightness, albedo.a);
 }

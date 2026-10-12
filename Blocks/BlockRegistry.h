@@ -13,6 +13,7 @@ public:
     static bool IsAir(BlockType type);
     static bool ShouldRenderFace(BlockType current, BlockType neighbour);
     static glm::vec3 GetFaceNormals(BlockFaceDirection face);
+    static glm::vec3 GetTint(BlockType type, BlockFaceDirection face);
     
     //Helper method for blocks with the same texture all around:
     constexpr static std::array<AtlasTile, static_cast<std::size_t>(BlockFaceDirection::Count)> AllFaceTextures(AtlasTile tile)
@@ -49,7 +50,7 @@ public:
             AllFaceTextures(AtlasTile{2, 15})
         },
 
-        //Grass
+        //Grass - Block
         BlockDefinition{
             true,
             true,
@@ -63,7 +64,9 @@ public:
                 AtlasTile{3, 15}, // Right
                 AtlasTile{0, 15}, // Top
                 AtlasTile{2, 15} // Bottom
-            }
+            },
+            BlockTintType::Grass,
+            {false, false, false, false, true, false}
         },
 
         //OakWood
@@ -131,6 +134,18 @@ public:
             BlockRenderLayer::Opaque,
             BlockModelType::Cube,
             AllFaceTextures(AtlasTile{2, 12})
+        },
+        
+        //Grass - Billboard
+        BlockDefinition{
+        false,
+            false,
+            true,
+            BlockRenderLayer::Cutout,
+            BlockModelType::CrossedBillboard,
+            AllFaceTextures(AtlasTile{11, 10}),
+            BlockTintType::Grass,
+            {true, true, true, true, true, true}
         }
 
     };
