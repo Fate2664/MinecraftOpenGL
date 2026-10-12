@@ -218,7 +218,7 @@ void Chunk::GenerateTrees()
     std::mt19937 randomEngine(rd());
     std::uniform_int_distribution<int> distribution(0, Constants::chunkSize - 1);
     std::uniform_int_distribution<int> treeDistr(0, 100);
-    if (treeDistr(randomEngine) >= 50)
+    if (treeDistr(randomEngine) >= 80)
         return;
 
     const int x = distribution(randomEngine);
@@ -240,7 +240,7 @@ void Chunk::GenerateDecorations()
     };
     
     std::mt19937 randomEngine(seed);
-    std::bernoulli_distribution spawnGrass(0.2); //20% spawn rate
+    std::bernoulli_distribution spawnGrass(0.06); //6% spawn rate
     
     for (int x = 0; x < Constants::chunkSize; x++)
     {
@@ -426,7 +426,8 @@ void Chunk::AddCrossedBillboard(const glm::vec3& blockPosition, BlockType blockT
                     rawVertices[sourceIndex] + blockPosition,
                     uv[sourceIndex],
                     reverse ? -frontNormal : frontNormal,
-                    tint
+                    tint,
+                    1.0f
                 });
             }
 
@@ -479,6 +480,7 @@ void Chunk::BuildChunk()
     chunkVAO.LinkAttrib(*chunkVBO, 1, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, texUV));
     chunkVAO.LinkAttrib(*chunkVBO, 2, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
     chunkVAO.LinkAttrib(*chunkVBO, 3, 3, GL_FLOAT, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, tint)));
+    chunkVAO.LinkAttrib(*chunkVBO, 4, 1, GL_FLOAT, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, unlit)));
 
     chunkEBO = std::make_unique<ElementBufferObject>(chunkIndices);
 

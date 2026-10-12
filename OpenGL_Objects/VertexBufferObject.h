@@ -11,6 +11,7 @@ struct Vertex
 	glm::vec2 texUV;
 	glm::vec3 normal;
 	glm::vec3 tint;
+	float unlit = 0.0f;
 };
 
 class VertexBufferObject {

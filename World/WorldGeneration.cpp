@@ -3,7 +3,7 @@
 
 WorldGeneration::WorldGeneration(int loadDistance) : loadDistance(loadDistance)
 {
-    blockTexture = std::make_unique<Texture>("MinecraftBlockTextures.png", "diffuse", 0, GL_RGBA, GL_UNSIGNED_BYTE);
+    blockTexture = std::make_unique<Texture>("MinecraftTextureAtlas.png", "diffuse", 0, GL_RGBA, GL_UNSIGNED_BYTE);
 }
 
 void WorldGeneration::Update(const Camera& camera)
@@ -24,7 +24,6 @@ void WorldGeneration::Render(Shader& shaderProgram, Camera& camera)
 {
     shaderProgram.Activate();
     shaderProgram.SetVec3("lightColor", glm::vec3(1.0f, 0.95f, 0.85f));
-    shaderProgram.SetVec3("directionalLight", (glm::vec3(-1.0f, -2.0f, -1.0f)));
     
     blockTexture->texUnit(shaderProgram, "diffuse0", 0);
     blockTexture->Bind();

@@ -58,11 +58,11 @@ public:
             BlockRenderLayer::Opaque,
             BlockModelType::Cube,
             {
-                AtlasTile{3, 15}, // Front
-                AtlasTile{3, 15}, // Back
-                AtlasTile{3, 15}, // Left
-                AtlasTile{3, 15}, // Right
-                AtlasTile{0, 15}, // Top
+                AtlasTile{0, 15}, // Front
+                AtlasTile{0, 15}, // Back
+                AtlasTile{0, 15}, // Left
+                AtlasTile{0, 15}, // Right
+                AtlasTile{1, 15}, // Top
                 AtlasTile{2, 15} // Bottom
             },
             BlockTintType::Grass,
@@ -77,12 +77,12 @@ public:
             BlockRenderLayer::Opaque,
             BlockModelType::Cube,
             {
-                AtlasTile{4, 14}, // Front
-                AtlasTile{4, 14}, // Back
-                AtlasTile{4, 14}, // Left
-                AtlasTile{4, 14}, // Right
-                AtlasTile{5, 14}, // Top
-                AtlasTile{5, 14} // Bottom
+                AtlasTile{4, 15}, // Front
+                AtlasTile{4, 15}, // Back
+                AtlasTile{4, 15}, // Left
+                AtlasTile{4, 15}, // Right
+                AtlasTile{5, 15}, // Top
+                AtlasTile{5, 15} // Bottom
             }
         },
 
@@ -93,7 +93,9 @@ public:
             false,
             BlockRenderLayer::Cutout,
             BlockModelType::Cube,
-            AllFaceTextures(AtlasTile{4, 12})
+            AllFaceTextures(AtlasTile{1, 14}),
+            BlockTintType::Foliage,
+            {true, true, true, true, true, true}
         },
         
         //Stone
@@ -103,7 +105,7 @@ public:
             false,
             BlockRenderLayer::Opaque,
             BlockModelType::Cube,
-            AllFaceTextures(AtlasTile{1, 15})
+            AllFaceTextures(AtlasTile{3, 15})
         },
         
         //Coal
@@ -113,7 +115,7 @@ public:
             false,
             BlockRenderLayer::Opaque,
             BlockModelType::Cube,
-            AllFaceTextures(AtlasTile{2, 13})
+            AllFaceTextures(AtlasTile{6, 15})
         },
         
         //Iron
@@ -123,7 +125,7 @@ public:
             false,
             BlockRenderLayer::Opaque,
             BlockModelType::Cube,
-            AllFaceTextures(AtlasTile{1, 13})
+            AllFaceTextures(AtlasTile{7, 15})
         },
         
         //Diamond
@@ -133,7 +135,7 @@ public:
             false,
             BlockRenderLayer::Opaque,
             BlockModelType::Cube,
-            AllFaceTextures(AtlasTile{2, 12})
+            AllFaceTextures(AtlasTile{9, 15})
         },
         
         //Grass - Billboard
@@ -143,7 +145,7 @@ public:
             true,
             BlockRenderLayer::Cutout,
             BlockModelType::CrossedBillboard,
-            AllFaceTextures(AtlasTile{11, 10}),
+            AllFaceTextures(AtlasTile{0, 14}),
             BlockTintType::Grass,
             {true, true, true, true, true, true}
         }

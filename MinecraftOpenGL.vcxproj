@@ -1021,6 +1021,7 @@
     <Content Include="Shaders\shadowMap.frag" />
     <Content Include="Shaders\shadowMap.vert" />
     <Content Include="Textures\dirtBlock.png" />
+    <Content Include="Textures\MinecraftTextureAtlas.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

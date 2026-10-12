@@ -53,7 +53,7 @@ glm::vec3 BlockRegistry::GetTint(BlockType type, BlockFaceDirection face)
         return glm::vec3(0.48f, 0.76f, 0.30f);
 
     case BlockTintType::Foliage:
-        return glm::vec3(0.38f, 0.68f, 0.25f);
+        return glm::vec3(0.28f, 0.68f, 0.25f);
 
     case BlockTintType::None:
     default:
