@@ -7,16 +7,16 @@
 class FrameBufferObject
 {
 public:
-    GLuint ID;
-    glm::uint frameBufferTexture;
-    glm::uint RBO;
-    FrameBufferObject();
+    FrameBufferObject(GLsizei width, GLsizei height);
     
-    void LinkAttrib();
-    void GenerateTexture();
-    void Bind();
+    void BindTexture(GLenum textureUnit);
+    void Bind() const;
     void Unbind();
     void Delete();
+    
+private:
+    GLuint ID;
+    glm::uint depthTexture;
 };
 
 #endif

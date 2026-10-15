@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 
 #include"Constants.h"
+#include "OpenGL_Objects/FrameBufferObject.h"
 #include "Player/Camera.h"
 #include "Shaders/ShaderClass.h"
 #include "World/WorldGeneration.h"
@@ -41,43 +42,12 @@ int main()
     Camera camera(Constants::windowWidth, Constants::windowHeight, glm::vec3(0.0f, 0.0f, 2.0f));
     WorldGeneration world(20);
 
-#pragma region Shadow Map
-    constexpr int shadowResolution = 7680;
+    //Shadow map
+    constexpr int shadowResolution = 4096;
     constexpr float shadowHalfExtent = 256.0f;
     const glm::vec3 sunDirection = glm::normalize(glm::vec3(-1.0f, -2.0f, -1.0f));
+    FrameBufferObject shadowMapFBO(shadowResolution, shadowResolution);
 
-    GLuint shadowFBO = 0;
-    GLuint shadowDepthTexture = 0;
-
-    glGenFramebuffers(1, &shadowFBO);
-    glGenTextures(1, &shadowDepthTexture);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, shadowDepthTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, shadowResolution, shadowResolution, 0, GL_DEPTH_COMPONENT,
-                 GL_FLOAT, nullptr);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-    const float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowDepthTexture, 0);
-
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE0);
-
-#pragma endregion
 
     glEnable(GL_DEPTH_TEST);
     glFrontFace(GL_CW);
@@ -100,7 +70,7 @@ int main()
 
         int frameBufferWidth;
         int frameBufferHeight;
-        glfwGetWindowSize(window, &frameBufferWidth, &frameBufferHeight);
+        glfwGetFramebufferSize(window, &frameBufferWidth, &frameBufferHeight);
 
         camera.width = frameBufferWidth;
         camera.height = frameBufferHeight;
@@ -130,8 +100,8 @@ int main()
         //Render Pass 1: render from the sun's POV
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, 0);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+        
+        shadowMapFBO.Bind();
         glViewport(0, 0, shadowResolution, shadowResolution);
         glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -146,6 +116,7 @@ int main()
         glDisable(GL_POLYGON_OFFSET_FILL);
 
         //Render Pass 2: render from the player's POV
+        shadowMapFBO.BindTexture(GL_TEXTURE1);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, frameBufferWidth, frameBufferHeight);
 
@@ -159,8 +130,7 @@ int main()
         shaderProgram.SetVec3("cameraPosition", camera.Position);
         shaderProgram.SetInt("shadowMap", 1);
 
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, shadowDepthTexture);
+        shadowMapFBO.BindTexture(GL_TEXTURE1);
 
         world.Render(shaderProgram, camera);
 
@@ -173,8 +143,7 @@ int main()
     world.Delete();
     shaderProgram.Delete();
     shadowShader.Delete();
-    glDeleteTextures(1, &shadowDepthTexture);
-    glDeleteFramebuffers(1, &shadowFBO);
+    shadowMapFBO.Delete();
     glfwDestroyWindow(window);
     glfwTerminate();
 #pragma endregion

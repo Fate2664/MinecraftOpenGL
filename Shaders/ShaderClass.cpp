@@ -11,6 +11,14 @@ std::string readFile(const char* fileName) {
 		in.seekg(0, std::ios::beg);
 		in.read(&contents[0], contents.size());
 		in.close();
+		
+		if (contents.size() >= 3 &&
+			static_cast<unsigned char>(contents[0]) == 0xEF &&
+			static_cast<unsigned char>(contents[1]) == 0xBB &&
+			static_cast<unsigned char>(contents[2]) == 0xBF) {
+			contents.erase(0, 3);
+			}
+		
 		return(contents);
 	}
 	throw(errno);
@@ -72,6 +80,7 @@ void Shader::SetInt(const char* name, const int value)
 #pragma endregion
 
 #pragma region Activate and Delete
+
 void Shader::Activate() {
 	glUseProgram(ID);
 }
@@ -79,6 +88,7 @@ void Shader::Activate() {
 void Shader::Delete() {
 	glDeleteProgram(ID);
 }
+
 #pragma endregion
 
 #pragma region ErrorChecks
